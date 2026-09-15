@@ -1,0 +1,26 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+#root {
+    height: 100vh;
+    width: 100%;
+}
+
+.cm-editor {
+    height: 100%;
+}
+
+@layer base {
+  h1 { 
+    @apply text-2xl font-extrabold tracking-tight; 
+  }
+  h2 { 
+    @apply text-xl font-bold; 
+  }
+  h3 { 
+    @apply text-lg font-semibold; 
+  }
+  h4, h5, h6 {
+    @apply font-semibold;
+  }
+}
