@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { File, FilePlus } from "lucide-react";
-import { useWorkspaceStore } from "./store";
+import { useFileSystemStore } from "./fileSystemStore";
+import { useWorkspaceUiStore } from "./workspaceUiStore";
 import type { WorkspaceFile } from "#/shared/files";
 import { extToContentType } from "#/shared/files";
 import { RenameDialog } from "./RenameDialog";
@@ -9,27 +10,19 @@ import { NewFileDialog } from "./NewFileDialog";
 import { NewFolderDialog } from "./NewFolderDialog";
 import { buildFileTree } from "./buildFileTree";
 
-const isSameOrDescendantPath = (candidatePath: string, targetPath: string) => {
-  return candidatePath === targetPath || candidatePath.startsWith(`${targetPath}/`);
-};
-
 const FileTree = () => {
-  const files = useWorkspaceStore((state) => state.files);
-  const folders = useWorkspaceStore((state) => state.folders);
-  const selectedTab = useWorkspaceStore((state) => state.selectedTab);
-  const setSelectedTab = useWorkspaceStore((state) => state.setSelectedTab);
-  const renameFile = useWorkspaceStore((state) => state.renameFile);
-  const removeTab = useWorkspaceStore((state) => state.removeTab);
-  const deleteFile = useWorkspaceStore((state) => state.deleteFile);
-  const setTabs = useWorkspaceStore((state) => state.setTabs);
-  const createFile = useWorkspaceStore((state) => state.createFile);
-  const fileIndex = useWorkspaceStore((state) => state.fileIndex);
-  const addFolder = useWorkspaceStore((state) => state.addFolder);
-  const deleteFolder = useWorkspaceStore((state) => state.deleteFolder);
-  const renameFolder = useWorkspaceStore((state) => state.renameFolder);
-  const editableWorkspace = useWorkspaceStore((state) => state.config.editable);
-  const expandedFolders = useWorkspaceStore((state) => state.expandedFolders);
-  const setExpandedFolders = useWorkspaceStore((state) => state.setExpandedFolders);
+  const filesByPath = useFileSystemStore((state) => state.files);
+  const files = useMemo(() => Object.values(filesByPath), [filesByPath]);
+  const folders = useFileSystemStore((state) => state.folders);
+  const createFile = useFileSystemStore((state) => state.createFile);
+  const addFolder = useFileSystemStore((state) => state.addFolder);
+  const renameEntry = useFileSystemStore((state) => state.renameEntry);
+  const deleteEntry = useFileSystemStore((state) => state.deleteEntry);
+  const selectedTab = useWorkspaceUiStore((state) => state.selectedTab);
+  const openTab = useWorkspaceUiStore((state) => state.openTab);
+  const editableWorkspace = useWorkspaceUiStore((state) => state.config.editable);
+  const expandedFolders = useWorkspaceUiStore((state) => state.expandedFolders);
+  const setExpandedFolders = useWorkspaceUiStore((state) => state.setExpandedFolders);
 
   const [renameDialog, setRenameDialog] = useState<{
     path: string;
@@ -69,11 +62,7 @@ const FileTree = () => {
   }, [fileTree, expandedFolders.size, setExpandedFolders]);
 
   const handleFileSelect = (file: WorkspaceFile) => {
-    setSelectedTab(file.filePath);
-    const tabs = useWorkspaceStore.getState().tabs;
-    if (!tabs.some((t) => t.filePath === file.filePath)) {
-      setTabs([...tabs, file]);
-    }
+    openTab(file.filePath);
   };
 
   const handleRename = (path: string, isFolder: boolean) => {
@@ -86,67 +75,34 @@ const FileTree = () => {
     pathParts[pathParts.length - 1] = newName;
     const newPath = pathParts.join("/");
 
-    if (renameDialog?.isFolder) {
-      renameFolder(oldPath, newPath);
-
-      files.
-        filter((f) => f.filePath.startsWith(oldPath)).
-        forEach((file) => {
-          const relativePath = file.filePath.substring(oldPath.length);
-          const newFilePath = newPath + relativePath;
-          renameFile(file.filePath, newFilePath);
-        });
-    } else {
-      renameFile(oldPath, newPath);
-    }
+    renameEntry(oldPath, newPath, renameDialog?.isFolder ?? false);
   };
 
   const handleDelete = (path: string, isFolder: boolean) => {
     setDeleteConfirm({ path, isFolder });
   };
 
-  const confirmDelete = async (path: string, isFolder: boolean) => {
-    if (isFolder) {
-      deleteFolder(path);
-
-      await Promise.all(files
-        .filter((f) => isSameOrDescendantPath(f.filePath, path))
-        .map(async (file) => {
-          removeTab(file.filePath);
-          await deleteFile(file.filePath);
-        }));
-    } else {
-      removeTab(path);
-      await deleteFile(path);
-    }
+  const confirmDelete = (path: string, isFolder: boolean) => {
+    deleteEntry(path, isFolder);
     setDeleteConfirm(null);
   };
 
   const handleNewFile = async (parentPath: string, fileName: string) => {
     const newFilePath = `${parentPath}/${fileName}`;
 
-    if (fileIndex.has(newFilePath)) {
+    if (filesByPath[newFilePath]) {
       return;
     }
 
     const contentType = extToContentType(newFilePath);
 
-    const { EditorView } = await import("codemirror");
-    const { Compartment } = await import("@codemirror/state");
-
     const newFile: WorkspaceFile = {
       filePath: newFilePath,
       content: "",
       contentType,
-      view: new EditorView(),
-      themeCompartment: new Compartment(),
     };
 
-    createFile(newFile);
-
-    const tabs = useWorkspaceStore.getState().tabs;
-    setTabs([...tabs, newFile]);
-    setSelectedTab(newFilePath);
+    if (createFile(newFile)) openTab(newFilePath);
   };
 
   const handleNewFolder = async (parentPath: string, folderName: string) => {

@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import type { WorkspaceFile } from "#/shared/files";
 import type { MobilePane } from "./workspace.types";
+import { getEditor } from "./editorRegistry";
 
 interface UseActiveWorkspaceTabOptions {
   tabs: WorkspaceFile[];
@@ -32,7 +33,7 @@ export const useActiveWorkspaceTab = ({
     }
 
     const rafId = requestAnimationFrame(() => {
-      activeFile.view.requestMeasure();
+      getEditor(activeFile.filePath).view.requestMeasure();
     });
 
     return () => {

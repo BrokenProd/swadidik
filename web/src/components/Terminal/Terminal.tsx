@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useTerminalStore } from "./terminalStore";
-import { useWorkspaceStore } from "#/components/workspace/store";
+import { useWorkspaceUiStore } from "#/components/Workspace/workspaceUiStore";
 import { getEditorThemeSettings } from "#/shared/themes";
 import loadFont from "#/fonts";
 import { BrushCleaning } from "lucide-react";
 
 const Terminal = () => {
-  const appearance = useWorkspaceStore((state) => state.appearance);
+  const appearance = useWorkspaceUiStore((state) => state.appearance);
 
   const clearTerminal = useTerminalStore((state) => state.clear);
   const history = useTerminalStore((state) => state.history);

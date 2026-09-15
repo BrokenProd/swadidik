@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import FileTypeIcon from "#/components/FileTypeIcon";
 import type { WorkspaceFile } from "#/shared/files";
-import { useWorkspaceStore } from "./store";
+import { useWorkspaceUiStore } from "./workspaceUiStore";
 
 export interface FileNode {
   name: string;
@@ -43,15 +43,15 @@ export const FileTreeNode = ({
   onDelete,
   selectedPath,
 }: FileTreeNodeProps) => {
-  const expandedFolders = useWorkspaceStore(state => state.expandedFolders);
-  const toggleFolderExpanded = useWorkspaceStore(state => state.toggleFolderExpanded);
+  const expandedFolders = useWorkspaceUiStore(state => state.expandedFolders);
+  const toggleFolderExpanded = useWorkspaceUiStore(state => state.toggleFolderExpanded);
   const [isHovered, setIsHovered] = useState(false);
 
   const isSelected = selectedPath === node.path;
   const paddingLeft = level * 12;
   const isRoot = node.isRoot;
 
-  const editableWorkspace = useWorkspaceStore(state => state.config.editable);
+  const editableWorkspace = useWorkspaceUiStore(state => state.config.editable);
 
   // check if this folder is expanded from the store
   const isOpen = isRoot || expandedFolders.has(node.path);

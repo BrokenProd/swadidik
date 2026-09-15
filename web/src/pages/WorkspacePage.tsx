@@ -1,4 +1,4 @@
-import Workspace from "#/components/workspace";
+import Workspace from "#/components/Workspace";
 
 function WorkspacePage() {
     return (

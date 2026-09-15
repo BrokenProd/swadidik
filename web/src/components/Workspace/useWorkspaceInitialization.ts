@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { initializeWorkspace, type WorkspaceConfig } from "./store";
+import type { WorkspaceConfig } from "./workspaceUiStore";
+import { useFileSystemStore } from "./fileSystemStore";
+import { useWorkspaceUiStore } from "./workspaceUiStore";
 
 interface UseWorkspaceInitializationOptions {
   uuid: string
@@ -33,10 +35,10 @@ export const useWorkspaceInitialization = ({
         const { loadWorkspaceFiles } = await import("./files");
         const ws = await loadWorkspaceFiles(uuid);
 
-        initializeWorkspace(
-          ws.files,
-          ws.files.length === 0 ? "" : ws.files[0].filePath,
-          ws.folders,
+        useFileSystemStore.getState().hydrate(ws.files, ws.folders);
+        useWorkspaceUiStore.getState().initializeTabs(
+          ws.files.map((file) => file.filePath),
+          ws.files[0]?.filePath ?? "",
         );
         setIsInitialized(true);
         setStatus("success");

@@ -1,6 +1,3 @@
-import type { Compartment } from "@codemirror/state";
-import type { EditorView } from "codemirror";
-
 type ContentType =
   | "plaintext"
   | "markdown"
@@ -15,8 +12,6 @@ interface WorkspaceFile {
   filePath: string;
   content: string;
   contentType: ContentType;
-  view: EditorView;
-  themeCompartment: Compartment;
 }
 
 export const extToContentType = (filePath: string) => {

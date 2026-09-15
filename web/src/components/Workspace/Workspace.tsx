@@ -1,12 +1,14 @@
 import { useRef, useState } from "react";
 import type { JSX } from "react";
+import type { WorkspaceFile } from "#/shared/files";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import type { GroupImperativeHandle, Layout } from "react-resizable-panels";
 import { CircleX, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { ToastContainer } from "#/components/Toast";
 import MarkdownPanel from "#/components/MarkdownPanel";
 import LoadingHolder from "./LoadingHolder";
-import { useWorkspaceStore } from "./store";
+import { useFileSystemStore } from "./fileSystemStore";
+import { useWorkspaceUiStore } from "./workspaceUiStore";
 import EditorPane from "./EditorPane";
 import { useDesktopLayout } from "./useDesktopLayout";
 import { useLazyWorkspaceComponents } from "./useLazyWorkspaceComponents";
@@ -43,9 +45,11 @@ const Workspace = ({ showFileTree, showTabs, editable }: Props) => {
   const layoutBeforeTerminalExpansion = useRef<Layout>(terminalLayout);
   const isDesktopLayout = useDesktopLayout();
 
-  const tabs = useWorkspaceStore((state) => state.tabs);
-  const selectedTab = useWorkspaceStore((state) => state.selectedTab);
-  const updateConfig = useWorkspaceStore((state) => state.updateConfig);
+  const tabPaths = useWorkspaceUiStore((state) => state.tabs);
+  const files = useFileSystemStore((state) => state.files);
+  const tabs = tabPaths.map((path) => files[path]).filter((file): file is WorkspaceFile => Boolean(file));
+  const selectedTab = useWorkspaceUiStore((state) => state.selectedTab);
+  const updateConfig = useWorkspaceUiStore((state) => state.updateConfig);
 
   const showTree = showFileTree === undefined || showFileTree;
 

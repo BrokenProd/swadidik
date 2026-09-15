@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, X } from "lucide-react";
-import { useWorkspaceStore } from "./store";
+import { useFileSystemStore } from "./fileSystemStore";
+import { useWorkspaceUiStore } from "./workspaceUiStore";
 import type { WorkspaceFile } from "#/shared/files";
 
 const Tab = ({
@@ -46,10 +47,12 @@ const Tab = ({
 };
 
 const WorkspaceTabs = () => {
-  const tabs = useWorkspaceStore((state) => state.tabs);
-  const selectedTab = useWorkspaceStore((state) => state.selectedTab);
-  const setSelectedTab = useWorkspaceStore((state) => state.setSelectedTab);
-  const removeTab = useWorkspaceStore((state) => state.removeTab);
+  const tabPaths = useWorkspaceUiStore((state) => state.tabs);
+  const files = useFileSystemStore((state) => state.files);
+  const tabs = tabPaths.map((path) => files[path]).filter((file): file is WorkspaceFile => Boolean(file));
+  const selectedTab = useWorkspaceUiStore((state) => state.selectedTab);
+  const setSelectedTab = useWorkspaceUiStore((state) => state.setSelectedTab);
+  const removeTab = useWorkspaceUiStore((state) => state.removeTab);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [canNavigateLeft, setCanNavigateLeft] = useState(currentIndex > 0 && tabs.length > 1);

@@ -4,7 +4,9 @@ import type { WorkspaceFile } from "#/shared/files";
 import { EditorState } from "@codemirror/state";
 import { setupExtensions } from "./setup";
 import { loadTheme } from "#/shared/themes";
-import { useWorkspaceStore } from "#/components/workspace/store";
+import { useFileSystemStore } from "#/components/Workspace/fileSystemStore";
+import { useWorkspaceUiStore } from "#/components/Workspace/workspaceUiStore";
+import { getEditor, getEditorPath } from "#/components/Workspace/editorRegistry";
 import type { ViewUpdate } from "@codemirror/view";
 
 const initializedViews = new WeakSet<EditorView>();
@@ -19,9 +21,8 @@ const Editor = ({ file }: EditorProps) => {
   const editorViewRef = useRef<EditorView | null>(null);
 
   const [isInitializing, setInitializing] = useState(false);
-  const appearance = useWorkspaceStore((state) => state.appearance);
-
-  const updateFile = useWorkspaceStore(state => state.updateFile)
+  const appearance = useWorkspaceUiStore((state) => state.appearance);
+  const updateFileContent = useFileSystemStore((state) => state.updateFileContent);
 
   // initialize
   useEffect(() => {
@@ -37,16 +38,17 @@ const Editor = ({ file }: EditorProps) => {
 
         const exts = [
           ...baseExtensions,
-          file.themeCompartment.of(initialTheme),
+          getEditor(file.filePath).themeCompartment.of(initialTheme),
           // update file from changes
           EditorView.updateListener.of((v: ViewUpdate) => {
             if (v.docChanged) {
-              updateFile({ ...file, content: v.state.doc.toString() })
+              const path = getEditorPath(v.view);
+              if (path) updateFileContent(path, v.state.doc.toString());
             }
           })
         ];
 
-        const view = file.view;
+        const view = getEditor(file.filePath).view;
         editorViewRef.current = view;
 
         if (!editorRef.current!.contains(view.dom)) {

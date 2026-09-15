@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { Settings2, X, Moon, Sun } from "lucide-react";
-import { useWorkspaceStore } from "./store";
+import { useFileSystemStore } from "./fileSystemStore";
+import { useWorkspaceUiStore } from "./workspaceUiStore";
+import { getEditor } from "./editorRegistry";
 import { loadTheme } from "#/shared/themes";
 import type { WorkspaceFile } from "#/shared/files";
 import {
@@ -17,19 +19,19 @@ const updateTheme = async (
   const { fontSize, fontFamily, editorTheme } = settings;
   const ext = await loadTheme(fontFamily, fontSize, editorTheme);
 
-  const view = file.view;
+  const { view, themeCompartment } = getEditor(file.filePath);
   view.dispatch({
-    effects: file.themeCompartment.reconfigure(ext),
+    effects: themeCompartment.reconfigure(ext),
   });
 };
 
 const EditorSettings = () => {
-  const selectedTab = useWorkspaceStore((state) => state.selectedTab);
-  const files = useWorkspaceStore((state) => state.files);
+  const selectedTab = useWorkspaceUiStore((state) => state.selectedTab);
+  const files = useFileSystemStore((state) => state.files);
 
   const [open, setOpen] = useState(false);
-  const settings = useWorkspaceStore(state => state.appearance);
-  const setSettings = useWorkspaceStore(state => state.updateAppearance);
+  const settings = useWorkspaceUiStore(state => state.appearance);
+  const setSettings = useWorkspaceUiStore(state => state.updateAppearance);
 
   const fonts = useMemo(() => ["JetBrains Mono", "Fira Code"], []);
 
@@ -42,7 +44,7 @@ const EditorSettings = () => {
     EditorAppearance.save(theme);
     setSettings(theme);
 
-    const file = files.find((f) => f.filePath === selectedTab);
+    const file = files[selectedTab];
     if (file) {
       const { fontSize, fontFamily } = theme;
       await loadFont(fontFamily, fontSize);
@@ -54,9 +56,7 @@ const EditorSettings = () => {
     setOpen(state);
 
     if (!state) {
-      files
-        .filter((f) => f.filePath !== selectedTab)
-        .forEach((f) => updateTheme(f, settings));
+      Object.values(files).filter((f) => f.filePath !== selectedTab).forEach((f) => updateTheme(f, settings));
     }
   };
 

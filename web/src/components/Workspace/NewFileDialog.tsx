@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
-import { useWorkspaceStore } from "./store";
+import { useFileSystemStore } from "./fileSystemStore";
 
 interface NewFileDialogProps {
   parentPath: string;
@@ -11,7 +11,7 @@ interface NewFileDialogProps {
 export const NewFileDialog = ({ parentPath, onConfirm, onClose }: NewFileDialogProps) => {
   const filenameRef = useRef("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const files = useWorkspaceStore(state => state.files);
+  const files = useFileSystemStore(state => state.files);
   const [filenameInvalid, setFilenameInvalid] = useState("")
 
   useEffect(() => {
@@ -48,8 +48,7 @@ export const NewFileDialog = ({ parentPath, onConfirm, onClose }: NewFileDialogP
       setFilenameInvalid(`Allowed special characters are "_", "-", "."`)
     }
 
-    const exists = new Set(files.map(f => f.filePath));
-    if (exists.has(filepath)) {
+    if (files[filepath]) {
       setFilenameInvalid("File with the same name already exist");
     } else {
       setFilenameInvalid("");
