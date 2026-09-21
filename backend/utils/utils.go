@@ -5,40 +5,10 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	"strings"
-	"time"
 
+	"codeberg.org/iklabib/swadidik/entities"
 	"github.com/golang-jwt/jwt/v5"
 )
-
-func Claim(jwtSecret []byte, bearerToken string) (jwt.MapClaims, error) {
-	claims := jwt.MapClaims{}
-
-	// split bearer <token>
-	parts := strings.Fields(bearerToken)
-	if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") || parts[1] == "" {
-		return claims, errors.New("missing bearer token")
-	}
-
-	// <token> part
-	raw := parts[1]
-
-	keyFunc := func(*jwt.Token) (any, error) {
-		return jwtSecret, nil
-	}
-
-	token, err := jwt.ParseWithClaims(raw, claims,
-		keyFunc,
-		jwt.WithValidMethods([]string{"HS256"}),
-		jwt.WithExpirationRequired(),
-		jwt.WithLeeway(5*time.Second),
-	)
-	if err != nil || !token.Valid {
-		return nil, errors.New("invalid or expired token")
-	}
-
-	return claims, nil
-}
 
 func WriteJSON(w http.ResponseWriter, status int, value any) {
 	w.Header().Set("Content-Type", "application/json")
@@ -46,4 +16,28 @@ func WriteJSON(w http.ResponseWriter, status int, value any) {
 	if err := json.NewEncoder(w).Encode(value); err != nil {
 		slog.Error("failed to write JSON response", "error", err)
 	}
+}
+
+func ParseToken(token, tokenType string, cfg entities.JwtConfig) (*entities.Claims, error) {
+	keyFunc := func(*jwt.Token) (any, error) {
+		return cfg.Secret, nil
+	}
+
+	claims := &entities.Claims{}
+	_, err := jwt.ParseWithClaims(token,
+		claims,
+		keyFunc,
+		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
+		jwt.WithIssuer(cfg.Issuer),
+		jwt.WithAudience(cfg.Audience),
+		jwt.WithExpirationRequired(),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	if claims.TokenType != tokenType || claims.Subject == "" {
+		return nil, errors.New("invalid token")
+	}
+	return claims, nil
 }

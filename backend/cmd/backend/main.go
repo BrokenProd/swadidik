@@ -5,8 +5,10 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
-	backend "codeberg.org/iklabib/swadidik"
+	"codeberg.org/iklabib/swadidik/entities"
+	"codeberg.org/iklabib/swadidik/server"
 )
 
 func main() {
@@ -15,9 +17,33 @@ func main() {
 		panic("empty JWT secret")
 	}
 
+	if secret := []byte(jwtSecret); len(secret) < 32 {
+		panic("JWT secret length need atleast 32 bytes")
+	}
+
+	jwtIssuer := os.Getenv("JWT_ISSUER")
+	if jwtIssuer == "" {
+		panic("empty JWT issuer")
+	}
+
+	jwtAudience := os.Getenv("JWT_AUDIENCE")
+	if jwtAudience == "" {
+		panic("empty JWT audience")
+	}
+
+	cfg := entities.JwtConfig{
+		Secret:   []byte(jwtSecret),
+		Issuer:   jwtIssuer,
+		Audience: jwtAudience,
+	}
+
 	server := &http.Server{
-		Addr:    ":8080",
-		Handler: backend.NewServer([]byte(jwtSecret)),
+		Addr:              ":8080",
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       15 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       60 * time.Second,
+		Handler:           server.NewServer(cfg),
 	}
 
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
