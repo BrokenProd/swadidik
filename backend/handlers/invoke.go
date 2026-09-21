@@ -3,11 +3,11 @@ package handlers
 import (
 	"net/http"
 
-	"codeberg.org/iklabib/swadidik/utils"
+	"github.com/labstack/echo/v5"
 )
 
-func RunHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Cache-Control", "no-store")
-	w.Header().Set("Pragma", "no-cache")
-	utils.WriteJSON(w, http.StatusOK, "run!")
+func RunHandler(c *echo.Context) error {
+	c.Response().Header().Set("Cache-Control", "no-store")
+	c.Response().Header().Set("Pragma", "no-cache")
+	return c.JSON(http.StatusOK, "run!")
 }

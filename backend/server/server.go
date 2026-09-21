@@ -1,23 +1,36 @@
 package server
 
 import (
-	"net/http"
-
 	"codeberg.org/iklabib/swadidik/entities"
 	"codeberg.org/iklabib/swadidik/handlers"
-	middlewares "codeberg.org/iklabib/swadidik/middlewares"
+	"codeberg.org/iklabib/swadidik/utils"
+	echojwt "github.com/labstack/echo-jwt/v5"
+	"github.com/labstack/echo/v5"
+	echomiddleware "github.com/labstack/echo/v5/middleware"
 )
 
-func NewServer(cfg entities.JwtConfig) http.Handler {
-	authHandlers := handlers.Auth{Cfg: cfg}
+func NewServer(config entities.Config) *echo.Echo {
+	e := echo.New()
+	e.Use(echomiddleware.BodyLimit(1 << 20))
+	e.Use(echomiddleware.Recover())
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("POST /auth/token", authHandlers.TokenHandler)
-	mux.HandleFunc("POST /auth/refresh", authHandlers.RefreshTokenHandler)
+	authHandlers := handlers.Auth{
+		Config: config,
+	}
 
-	RequireTokenMiddleware := middlewares.RequireAccessToken(cfg)
+	authGroup := e.Group("/auth")
+	authGroup.POST("/token", authHandlers.TokenHandler)
+	authGroup.POST("/refresh", authHandlers.RefreshTokenHandler)
 
-	mux.Handle("POST /invoke/run", RequireTokenMiddleware(http.HandlerFunc(handlers.RunHandler)))
+	jwtMiddleware := echojwt.Config{
+		ParseTokenFunc: func(c *echo.Context, auth string) (interface{}, error) {
+			return utils.VerifyJwt(auth, "access", config)
+		},
+	}
 
-	return mux
+	invoke := e.Group("/invoke")
+	invoke.Use(echojwt.WithConfig(jwtMiddleware))
+	invoke.POST("/run", handlers.RunHandler)
+
+	return e
 }

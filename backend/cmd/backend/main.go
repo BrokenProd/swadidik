@@ -31,7 +31,7 @@ func main() {
 		panic("empty JWT audience")
 	}
 
-	cfg := entities.JwtConfig{
+	config := entities.Config{
 		Secret:   []byte(jwtSecret),
 		Issuer:   jwtIssuer,
 		Audience: jwtAudience,
@@ -43,7 +43,7 @@ func main() {
 		ReadTimeout:       15 * time.Second,
 		WriteTimeout:      30 * time.Second,
 		IdleTimeout:       60 * time.Second,
-		Handler:           server.NewServer(cfg),
+		Handler:           server.NewServer(config),
 	}
 
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
