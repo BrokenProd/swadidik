@@ -18,67 +18,57 @@ const (
 
 var defaultRoles = []string{"user"}
 
-type Auth struct {
-	Config entities.Config
+func TokenHandler(jwt utils.JWTService) echo.HandlerFunc {
+	return func(c *echo.Context) error {
+		var req entities.TokenRequest
+		if err := c.Bind(&req); err != nil || req.UserName == "" {
+			return c.JSON(http.StatusBadRequest,
+				map[string]string{"error": "invalid token request"})
+		}
+
+		resp, err := issueTokenPair(jwt, req.UserName)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError,
+				map[string]string{"error": "could not generate token"})
+		}
+
+		setNoStoreHeaders(c)
+		return c.JSON(http.StatusOK, resp)
+	}
 }
 
-func (a Auth) TokenHandler(c *echo.Context) error {
-	var req entities.TokenRequest
-	if err := c.Bind(&req); err != nil || req.UserName == "" {
-		return c.JSON(http.StatusBadRequest,
-			map[string]string{"error": "invalid token request"})
+func RefreshTokenHandler(jwt utils.JWTService) echo.HandlerFunc {
+	return func(c *echo.Context) error {
+		var req entities.RefreshTokenRequest
+		if err := c.Bind(&req); err != nil || req.RefreshToken == "" {
+			return c.JSON(http.StatusBadRequest,
+				map[string]string{"error": "invalid refresh token request"})
+		}
+
+		claims, err := jwt.Verify(req.RefreshToken, tokenTypeRefresh)
+		if err != nil {
+			return c.JSON(http.StatusUnauthorized,
+				map[string]string{"error": "invalid or expired refresh token"})
+		}
+
+		resp, err := issueTokenPair(jwt, claims.Subject)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError,
+				map[string]string{"error": "could not generate token"})
+		}
+
+		setNoStoreHeaders(c)
+		return c.JSON(http.StatusOK, resp)
 	}
-
-	resp, err := a.issueTokenPair(req.UserName)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError,
-			map[string]string{"error": "could not generate token"})
-	}
-
-	c.Response().Header().Set("Cache-Control", "no-store")
-	c.Response().Header().Set("Pragma", "no-cache")
-
-	return c.JSON(http.StatusOK, resp)
 }
 
-func (a Auth) RefreshTokenHandler(c *echo.Context) error {
-	var req entities.RefreshTokenRequest
-	if err := c.Bind(&req); err != nil || req.RefreshToken == "" {
-		return c.JSON(http.StatusBadRequest,
-			map[string]string{"error": "invalid refresh token request"})
-	}
-
-	claims, err := utils.VerifyJwt(req.RefreshToken, tokenTypeRefresh, a.Config)
-	if err != nil {
-		return c.JSON(http.StatusUnauthorized,
-			map[string]string{"error": "invalid or expired refresh token"})
-	}
-
-	resp, err := a.issueTokenPair(claims.Subject)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError,
-			map[string]string{"error": "could not generate token"})
-	}
-
-	c.Response().Header().Set("Cache-Control", "no-store")
-	c.Response().Header().Set("Pragma", "no-cache")
-
-	return c.JSON(http.StatusOK, resp)
-}
-
-func (a Auth) issueTokenPair(user string) (entities.TokenResponse, error) {
-	now := time.Now()
-	accessExpiresAt := now.Add(accessTokenLifetime)
-	access, err := utils.IssueNewToken(user, tokenTypeAccess, now, accessExpiresAt, a.Config)
+func issueTokenPair(jwt utils.JWTService, user string) (entities.TokenResponse, error) {
+	access, accessExpiresAt, err := jwt.Issue(user, tokenTypeAccess, accessTokenLifetime)
 	if err != nil {
 		return entities.TokenResponse{}, err
 	}
 
-	refresh, err := utils.IssueNewToken(user,
-		tokenTypeRefresh,
-		now,
-		now.Add(refreshTokenLifetime),
-		a.Config)
+	refresh, _, err := jwt.Issue(user, tokenTypeRefresh, refreshTokenLifetime)
 
 	if err != nil {
 		return entities.TokenResponse{}, err
@@ -92,4 +82,9 @@ func (a Auth) issueTokenPair(user string) (entities.TokenResponse, error) {
 	}
 
 	return tokenResp, nil
+}
+
+func setNoStoreHeaders(c *echo.Context) {
+	c.Response().Header().Set("Cache-Control", "no-store")
+	c.Response().Header().Set("Pragma", "no-cache")
 }

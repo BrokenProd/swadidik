@@ -14,17 +14,15 @@ func NewServer(config entities.Config) *echo.Echo {
 	e.Use(echomiddleware.BodyLimit(1 << 20))
 	e.Use(echomiddleware.Recover())
 
-	authHandlers := handlers.Auth{
-		Config: config,
-	}
+	jwtService := utils.NewJWTService(config)
 
 	authGroup := e.Group("/auth")
-	authGroup.POST("/token", authHandlers.TokenHandler)
-	authGroup.POST("/refresh", authHandlers.RefreshTokenHandler)
+	authGroup.POST("/token", handlers.TokenHandler(jwtService))
+	authGroup.POST("/refresh", handlers.RefreshTokenHandler(jwtService))
 
 	jwtMiddleware := echojwt.Config{
 		ParseTokenFunc: func(c *echo.Context, auth string) (interface{}, error) {
-			return utils.VerifyJwt(auth, "access", config)
+			return jwtService.Verify(auth, "access")
 		},
 	}
 

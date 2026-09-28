@@ -10,16 +10,22 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func IssueNewToken(subject string,
-	tokenType string,
-	issuedAt,
-	expiresAt time.Time,
-	config entities.Config) (string, error) {
+type JWTService struct {
+	config entities.Config
+}
+
+func NewJWTService(config entities.Config) JWTService {
+	return JWTService{config: config}
+}
+
+func (s JWTService) Issue(subject, tokenType string, lifetime time.Duration) (string, time.Time, error) {
+	issuedAt := time.Now()
+	expiresAt := issuedAt.Add(lifetime)
 	claims := entities.Claims{
 		TokenType: tokenType,
 		Subject:   subject,
-		Issuer:    config.Issuer,
-		Audience:  jwt.ClaimStrings{config.Audience},
+		Issuer:    s.config.Issuer,
+		Audience:  jwt.ClaimStrings{s.config.Audience},
 		ID:        rand.Text(),
 		IssuedAt:  jwt.NewNumericDate(issuedAt),
 		NotBefore: jwt.NewNumericDate(issuedAt),
@@ -31,15 +37,16 @@ func IssueNewToken(subject string,
 		panic("new claims is nil")
 	}
 
-	return newClaims.SignedString(config.Secret)
+	token, err := newClaims.SignedString(s.config.Secret)
+	return token, expiresAt, err
 }
 
-func Claim(auth string, config entities.Config) (*jwt.Token, *entities.Claims, error) {
+func (s JWTService) Claim(auth string) (*jwt.Token, *entities.Claims, error) {
 	keyFunc := func(t *jwt.Token) (interface{}, error) {
 		if t.Method.Alg() != "HS256" {
 			return nil, fmt.Errorf("unexpected jwt signing method=%v", t.Header["alg"])
 		}
-		return config.Secret, nil
+		return s.config.Secret, nil
 	}
 
 	claims := &entities.Claims{}
@@ -47,15 +54,15 @@ func Claim(auth string, config entities.Config) (*jwt.Token, *entities.Claims, e
 		claims,
 		keyFunc,
 		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
-		jwt.WithIssuer(config.Issuer),
-		jwt.WithAudience(config.Audience),
+		jwt.WithIssuer(s.config.Issuer),
+		jwt.WithAudience(s.config.Audience),
 		jwt.WithExpirationRequired())
 
 	return token, claims, err
 }
 
-func VerifyJwt(auth, tokenType string, config entities.Config) (*entities.Claims, error) {
-	token, claims, err := Claim(auth, config)
+func (s JWTService) Verify(auth, tokenType string) (*entities.Claims, error) {
+	token, claims, err := s.Claim(auth)
 	if err != nil {
 		return nil, err
 	}
