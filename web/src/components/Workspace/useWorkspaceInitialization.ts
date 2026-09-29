@@ -31,11 +31,14 @@ export const useWorkspaceInitialization = ({
 
   useEffect(() => {
     const initialize = async () => {
+      setIsInitialized(false);
+      setStatus("loading");
+
       try {
         const { loadWorkspaceFiles } = await import("./files");
         const ws = await loadWorkspaceFiles(uuid);
 
-        useFileSystemStore.getState().hydrate(ws.files, ws.folders);
+        useFileSystemStore.getState().hydrate(ws.files);
         useWorkspaceUiStore.getState().initializeTabs(
           ws.files.map((file) => file.filePath),
           ws.files[0]?.filePath ?? "",
@@ -48,7 +51,7 @@ export const useWorkspaceInitialization = ({
     };
 
     initialize();
-  }, []);
+  }, [uuid]);
 
   return { isInitialized, status };
 };

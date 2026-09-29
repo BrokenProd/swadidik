@@ -17,6 +17,7 @@ import { useActiveWorkspaceTab } from "./useActiveWorkspaceTab";
 import type { MobilePane } from "./workspace.types";
 
 interface Props {
+  uuid: string;
   showFileTree?: boolean;
   showTabs?: boolean;
   editable?: boolean;
@@ -33,7 +34,7 @@ const PANEL_IDS = {
   terminal: "workspace-terminal",
 } as const;
 
-const Workspace = ({ showFileTree, showTabs, editable }: Props) => {
+const Workspace = ({ uuid, showFileTree, showTabs, editable }: Props) => {
   const [maximizeTerminal, setMaximizeTerminal] = useState(false);
   const [isFileTreeCollapsed, setIsFileTreeCollapsed] = useState(false);
   const [mobilePane, setMobilePane] = useState<MobilePane>("editor");
@@ -54,7 +55,7 @@ const Workspace = ({ showFileTree, showTabs, editable }: Props) => {
   const showTree = showFileTree === undefined || showFileTree;
 
   const { isInitialized, status } = useWorkspaceInitialization({
-    uuid: "382b10ba-1c1f-4cd9-8616-c3e9271c48c7",
+    uuid,
     showTabs,
     editable,
     updateConfig,

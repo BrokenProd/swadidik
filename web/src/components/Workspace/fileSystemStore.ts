@@ -12,7 +12,7 @@ const isSameOrDescendant = (candidate: string, path: string) => candidate === pa
 interface FileSystemState {
   files: WorkspaceFiles;
   folders: Set<string>;
-  hydrate: (files: WorkspaceFile[], folders?: string[]) => void;
+  hydrate: (files: WorkspaceFile[]) => void;
   createFile: (file: WorkspaceFile) => boolean;
   updateFileContent: (path: string, content: string) => void;
   addFolder: (path: string) => boolean;
@@ -22,9 +22,9 @@ interface FileSystemState {
 
 export const useFileSystemStore = create<FileSystemState>()(immer((set, get) => ({
   files: {}, folders: new Set(),
-  hydrate: (files, folders = []) => {
+  hydrate: (files) => {
     clearEditors();
-    set((state) => { state.files = Object.fromEntries(files.map((file) => [file.filePath, file])); state.folders = new Set(folders); });
+    set((state) => { state.files = Object.fromEntries(files.map((file) => [file.filePath, file])); state.folders = new Set(); });
   },
   createFile: (file) => {
     if (get().files[file.filePath]) return false;
