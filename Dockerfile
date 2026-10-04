@@ -72,18 +72,16 @@ FROM base AS final
 # copy nsjail binary
 COPY --from=nsjail /bin/nsjail /bin
 
-# Graalvm
-ENV JAVA_HOME=/opt/graalvm
-ENV PATH=$PATH:${JAVA_HOME}/bin
-COPY --from=java /opt/graalvm /opt/graalvm
-
 # Go
 ENV PATH=$PATH:/opt/go/bin
 COPY --from=go /opt/go /opt/go
 
+ENV TZ=Asia/Jakarta
+RUN apt-get update && apt-get install -y python3
 # RUN apt-get install -y cgroup-tools && rm -rf /var/lib/apt/lists/*
 RUN rm -rf /var/lib/apt/lists/*
 
 WORKDIR /
+COPY profiles/ profiles/
 # COPY docker-entrypoint.sh .
 # ENTRYPOINT ["/bin/bash", "docker-entrypoint.sh"]
