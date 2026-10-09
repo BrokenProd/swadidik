@@ -46,6 +46,7 @@ func main() {
 		Handler:           server.NewServer(config),
 	}
 
+	slog.Info("starting at " + server.Addr)
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		slog.Error("failed to start server", "error", err)
 	}

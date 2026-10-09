@@ -3,6 +3,7 @@ package server
 import (
 	"codeberg.org/iklabib/swadidik/entities"
 	"codeberg.org/iklabib/swadidik/handlers"
+	"codeberg.org/iklabib/swadidik/storage"
 	"codeberg.org/iklabib/swadidik/utils"
 	echojwt "github.com/labstack/echo-jwt/v5"
 	"github.com/labstack/echo/v5"
@@ -13,6 +14,7 @@ func NewServer(config entities.Config) *echo.Echo {
 	e := echo.New()
 	e.Use(echomiddleware.BodyLimit(1 << 20))
 	e.Use(echomiddleware.Recover())
+	e.Use(echomiddleware.CORS("http://localhost:5173", "*"))
 
 	jwtService := utils.NewJWTService(config)
 
@@ -26,9 +28,15 @@ func NewServer(config entities.Config) *echo.Echo {
 		},
 	}
 
-	invoke := e.Group("/invoke")
-	invoke.Use(echojwt.WithConfig(jwtMiddleware))
-	invoke.POST("/run", handlers.RunHandler)
+	invokeGroup := e.Group("/invoke")
+	invokeGroup.Use(echojwt.WithConfig(jwtMiddleware))
+	invokeGroup.POST("/run", handlers.RunHandler)
+
+	s3client := storage.NewDefault()
+
+	filesGroup := e.Group("/files")
+	filesGroup.Use(echojwt.WithConfig(jwtMiddleware))
+	filesGroup.GET("/:id", handlers.FilesHandler(s3client))
 
 	return e
 }

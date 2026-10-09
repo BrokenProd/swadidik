@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"io"
+	"os"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/smithy-go"
 )
@@ -50,13 +52,17 @@ type GetResult struct {
 func NewDefault() *S3Client {
 	ctx := context.Background()
 
-	sdkConfig, err := config.LoadDefaultConfig(ctx)
+	accessId := os.Getenv("AWS_ACCESS_KEY_ID")
+	accessKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
+
+	staticCred := credentials.NewStaticCredentialsProvider(accessId, accessKey, "")
+	credProvider := config.WithCredentialsProvider(staticCred)
+	sdkConfig, err := config.LoadDefaultConfig(ctx, credProvider)
 	if err != nil {
 		panic(err)
 	}
 
 	client := s3.NewFromConfig(sdkConfig, func(o *s3.Options) {
-		o.BaseEndpoint = aws.String("https://t3.storage.dev")
 		o.Region = "auto"
 		o.UsePathStyle = false
 	})
@@ -180,6 +186,40 @@ func (c *S3Client) Exists(
 	}
 
 	return false, err
+}
+
+func (c *S3Client) FetchFilesByPrefix(
+	ctx context.Context,
+	bucket string,
+	prefix string,
+) ([]Object, error) {
+	paginator := s3.NewListObjectsV2Paginator(
+		c.client,
+		&s3.ListObjectsV2Input{
+			Bucket: aws.String(bucket),
+			Prefix: aws.String(prefix),
+		},
+	)
+
+	objects := make([]Object, 0)
+
+	for paginator.HasMorePages() {
+		result, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, item := range result.Contents {
+			objects = append(objects, Object{
+				Key:          aws.ToString(item.Key),
+				Size:         aws.ToInt64(item.Size),
+				ETag:         aws.ToString(item.ETag),
+				LastModified: aws.ToTime(item.LastModified),
+			})
+		}
+	}
+
+	return objects, nil
 }
 
 // ListObjects lists one page of objects.
