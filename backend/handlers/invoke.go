@@ -21,6 +21,8 @@ func RunHandler(c *echo.Context) error {
 	switch runDto.Language {
 	case "python":
 		python := runners.NewPython(runDto.Files)
+		defer python.Dispose()
+
 		if err := python.Prep(); err != nil {
 			return c.String(http.StatusInternalServerError, "prep error: "+err.Error())
 		}
@@ -38,6 +40,8 @@ func RunHandler(c *echo.Context) error {
 
 	case "java":
 		java := runners.NewJava(runDto.Files)
+		defer java.Dispose()
+
 		if err := java.Prep(); err != nil {
 			return c.String(http.StatusInternalServerError, "prep error: "+err.Error())
 		}

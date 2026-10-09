@@ -66,3 +66,7 @@ func (python *Python) Run() (string, error) {
 
 	return string(output), err
 }
+
+func (python *Python) Dispose() error {
+	return os.RemoveAll(python.Workdir)
+}

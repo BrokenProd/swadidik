@@ -100,3 +100,7 @@ func (java *Java) Run() (string, error) {
 
 	return string(output), nil
 }
+
+func (java *Java) Dispose() error {
+	return os.RemoveAll(java.Workdir)
+}

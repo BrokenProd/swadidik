@@ -4,6 +4,7 @@ type Runner interface {
 	Prep() error
 	Build() error
 	Run() (string, error)
+	Dispose() error
 }
 
 type SourceFile struct {
