@@ -1,27 +1,27 @@
 @font-face {
-    font-display: swap;
-    font-family: "JetBrains Mono";
-    font-weight: 400;
-    font-style: normal;
-    src:
-        local("JetBrainsMono-Regular"), local("JetBrains Mono Regular"),
-        url("./JetBrainsMono/JetBrainsMono-Regular.ttf");
+  font-display: swap;
+  font-family: "JetBrains Mono";
+  font-weight: 400;
+  font-style: normal;
+  src:
+    local("JetBrainsMono-Regular"), local("JetBrains Mono Regular"),
+    url("./JetBrainsMono/JetBrainsMono-Regular.ttf");
 }
 @font-face {
-    font-display: swap;
-    font-family: "JetBrains Mono";
-    font-weight: 700;
-    font-style: normal;
-    src:
-        local("JetBrainsMono-Bold"), local("JetBrains Mono Bold"),
-        url("./JetBrainsMono/JetBrainsMono-Bold.ttf");
+  font-display: swap;
+  font-family: "JetBrains Mono";
+  font-weight: 700;
+  font-style: normal;
+  src:
+    local("JetBrainsMono-Bold"), local("JetBrains Mono Bold"),
+    url("./JetBrainsMono/JetBrainsMono-Bold.ttf");
 }
 @font-face {
-    font-display: swap;
-    font-family: "JetBrains Mono";
-    font-weight: 400;
-    font-style: italic;
-    src:
-        local("JetBrainsMono-Italic"), local("JetBrains Mono Italic"),
-        url("./JetBrainsMono/JetBrainsMono-Italic.ttf");
+  font-display: swap;
+  font-family: "JetBrains Mono";
+  font-weight: 400;
+  font-style: italic;
+  src:
+    local("JetBrainsMono-Italic"), local("JetBrains Mono Italic"),
+    url("./JetBrainsMono/JetBrainsMono-Italic.ttf");
 }

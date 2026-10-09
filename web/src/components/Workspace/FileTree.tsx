@@ -3,7 +3,6 @@ import { File, FilePlus } from "lucide-react";
 import { useFileSystemStore } from "./fileSystemStore";
 import { useWorkspaceUiStore } from "./workspaceUiStore";
 import type { WorkspaceFile } from "#/shared/files";
-import { extToContentType } from "#/shared/files";
 import { RenameDialog } from "./RenameDialog";
 import { FileTreeNode, type FileNode } from "./FileTreeNode";
 import { NewFileDialog } from "./NewFileDialog";
@@ -20,9 +19,13 @@ const FileTree = () => {
   const deleteEntry = useFileSystemStore((state) => state.deleteEntry);
   const selectedTab = useWorkspaceUiStore((state) => state.selectedTab);
   const openTab = useWorkspaceUiStore((state) => state.openTab);
-  const editableWorkspace = useWorkspaceUiStore((state) => state.config.editable);
+  const editableWorkspace = useWorkspaceUiStore(
+    (state) => state.config.editable,
+  );
   const expandedFolders = useWorkspaceUiStore((state) => state.expandedFolders);
-  const setExpandedFolders = useWorkspaceUiStore((state) => state.setExpandedFolders);
+  const setExpandedFolders = useWorkspaceUiStore(
+    (state) => state.setExpandedFolders,
+  );
 
   const [renameDialog, setRenameDialog] = useState<{
     path: string;
@@ -35,10 +38,17 @@ const FileTree = () => {
     isFolder: boolean;
   } | null>(null);
 
-  const [showNewFileDialog, setShowNewFileDialog] = useState<string | null>(null);
-  const [showNewFolderDialog, setShowNewFolderDialog] = useState<string | null>(null);
+  const [showNewFileDialog, setShowNewFileDialog] = useState<string | null>(
+    null,
+  );
+  const [showNewFolderDialog, setShowNewFolderDialog] = useState<string | null>(
+    null,
+  );
 
-  const fileTree = useMemo(() => buildFileTree(files, folders), [files, folders]);
+  const fileTree = useMemo(
+    () => buildFileTree(files, folders),
+    [files, folders],
+  );
 
   // initialize all folders as expanded when the tree changes and no folders are expanded yet
   useEffect(() => {
@@ -94,12 +104,9 @@ const FileTree = () => {
       return;
     }
 
-    const contentType = extToContentType(newFilePath);
-
     const newFile: WorkspaceFile = {
       filePath: newFilePath,
       content: "",
-      contentType,
     };
 
     if (createFile(newFile)) openTab(newFilePath);
@@ -129,14 +136,15 @@ const FileTree = () => {
             <div className="flex flex-col items-center justify-center h-full p-4 text-center">
               <File className="size-8 opacity-30 mb-2" />
               <p className="text-sm opacity-60">No files</p>
-              {editableWorkspace &&
+              {editableWorkspace && (
                 <button
                   className="btn btn-sm btn-primary mt-3"
                   onClick={() => setShowNewFileDialog(getRootPath())}
                 >
                   <FilePlus className="size-4" />
                   Create File
-                </button>}
+                </button>
+              )}
             </div>
           ) : (
             fileTree.map((node) => (
@@ -167,7 +175,9 @@ const FileTree = () => {
       {editableWorkspace && showNewFolderDialog && (
         <NewFolderDialog
           parentPath={showNewFolderDialog}
-          onConfirm={(folderName) => handleNewFolder(showNewFolderDialog, folderName)}
+          onConfirm={(folderName) =>
+            handleNewFolder(showNewFolderDialog, folderName)
+          }
           onClose={() => setShowNewFolderDialog(null)}
         />
       )}
@@ -191,7 +201,8 @@ const FileTree = () => {
               <span className="font-semibold">
                 {deleteConfirm.path.split("/").pop()}
               </span>
-              {deleteConfirm.isFolder ? " and all files inside it" : ""}? This action cannot be undone.
+              {deleteConfirm.isFolder ? " and all files inside it" : ""}? This
+              action cannot be undone.
             </p>
             <div className="modal-action">
               <button

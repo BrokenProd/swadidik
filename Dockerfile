@@ -38,21 +38,15 @@ RUN git clone https://github.com/google/nsjail.git \
 # Stage: java
 FROM base AS java
 
-ARG JDK_MAJOR_VERSION=25
-
-ENV JAVA_HOME=/opt/graalvm
-ENV PATH="${JAVA_HOME}/bin:${PATH}"
+ARG JDK_VERSION="21.0.12.15"
 
 RUN apt-get update \
     && apt-get install -y aria2 \
     && rm -rf /var/lib/apt/lists/*
 
-RUN aria2c -x 16 -s 16 "https://download.oracle.com/graalvm/${JDK_MAJOR_VERSION}/archive/graalvm-jdk-${JDK_MAJOR_VERSION}_linux-x64_bin.tar.gz"
-RUN set -eux \
-    && tar -xzf "graalvm-jdk-${JDK_MAJOR_VERSION}_linux-x64_bin.tar.gz" -C /opt \
-    && GRAALVM_DIR="$(find /opt -maxdepth 1 -type d -name "graalvm-jdk-${JDK_MAJOR_VERSION}*" -print -quit)" \
-    && mv "$GRAALVM_DIR" "$JAVA_HOME" \
-    && rm "graalvm-jdk-${JDK_MAJOR_VERSION}_linux-x64_bin.tar.gz"
+RUN aria2c -x 16 -s 16 "https://github.com/ibmruntimes/semeru21-binaries/releases/download/jdk-${JDK_VERSION}/ibm-semeru-open-jdk_x64_linux_${JDK_VERSION}.tar.gz"
+RUN tar -xzf "ibm-semeru-open-jdk_x64_linux_${JDK_VERSION}.tar.gz" -C /opt
+RUN mv /opt/jdk-${JDK_VERSION} /opt/jdk
 
 FROM base AS go
 ARG GO_VERSION=1.27.1
@@ -63,14 +57,18 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 RUN aria2c -x 16 -s 16 https://go.dev/dl/go${GO_VERSION}.linux-${GO_ARCH}.tar.gz
-RUN tar -xf go${GO_VERSION}.linux-${GO_ARCH}.tar.gz -C /opt \
-    && rm -r /opt/go/src
+RUN tar -xf go${GO_VERSION}.linux-${GO_ARCH}.tar.gz -C /opt 
 
 # Final stage: collections 
 FROM base AS final
 
 # copy nsjail binary
 COPY --from=nsjail /bin/nsjail /bin
+
+# java
+ENV JAVA_HOME=/opt/jdk
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
+COPY --from=java /opt/jdk /opt/jdk
 
 # Go
 ENV PATH=$PATH:/opt/go/bin
@@ -81,7 +79,13 @@ RUN apt-get update && apt-get install -y python3
 # RUN apt-get install -y cgroup-tools && rm -rf /var/lib/apt/lists/*
 RUN rm -rf /var/lib/apt/lists/*
 
-WORKDIR /
+WORKDIR /backend
+COPY backend/go.mod backend/go.sum ./
+RUN go mod download
+COPY backend/ .
+RUN go build -o /app/main ./cmd/backend/main.go
+
+WORKDIR /app
+RUN rm -r /backend
 COPY profiles/ profiles/
-# COPY docker-entrypoint.sh .
-# ENTRYPOINT ["/bin/bash", "docker-entrypoint.sh"]
+ENTRYPOINT ./main

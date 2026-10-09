@@ -23,17 +23,12 @@ const loadJava = async () => {
   return java();
 };
 
-
 const setupExtensions = async (lang: string) => {
-  const extensions = [
-    minimalSetup,
-    keymap.of([indentWithTab]),
-    lineNumbers(),
-  ];
+  const extensions = [minimalSetup, keymap.of([indentWithTab]), lineNumbers()];
 
   switch (lang) {
-    case "java": 
-      extensions.push(await loadJava()); 
+    case "java":
+      extensions.push(await loadJava());
       break;
     case "python":
       extensions.push(await loadPython());

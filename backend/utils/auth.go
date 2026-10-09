@@ -18,18 +18,19 @@ func NewJWTService(config entities.Config) JWTService {
 	return JWTService{config: config}
 }
 
-func (s JWTService) Issue(subject, tokenType string, lifetime time.Duration) (string, time.Time, error) {
+func (s JWTService) Issue(subject, tokenType string, lifetime time.Duration, persistent bool) (string, time.Time, error) {
 	issuedAt := time.Now()
 	expiresAt := issuedAt.Add(lifetime)
 	claims := entities.Claims{
-		TokenType: tokenType,
-		Subject:   subject,
-		Issuer:    s.config.Issuer,
-		Audience:  jwt.ClaimStrings{s.config.Audience},
-		ID:        rand.Text(),
-		IssuedAt:  jwt.NewNumericDate(issuedAt),
-		NotBefore: jwt.NewNumericDate(issuedAt),
-		ExpiresAt: jwt.NewNumericDate(expiresAt),
+		TokenType:  tokenType,
+		Persistent: persistent,
+		Subject:    subject,
+		Issuer:     s.config.Issuer,
+		Audience:   jwt.ClaimStrings{s.config.Audience},
+		ID:         rand.Text(),
+		IssuedAt:   jwt.NewNumericDate(issuedAt),
+		NotBefore:  jwt.NewNumericDate(issuedAt),
+		ExpiresAt:  jwt.NewNumericDate(expiresAt),
 	}
 
 	newClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

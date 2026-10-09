@@ -48,7 +48,9 @@ const Workspace = ({ uuid, showFileTree, showTabs, editable }: Props) => {
 
   const tabPaths = useWorkspaceUiStore((state) => state.tabs);
   const files = useFileSystemStore((state) => state.files);
-  const tabs = tabPaths.map((path) => files[path]).filter((file): file is WorkspaceFile => Boolean(file));
+  const tabs = tabPaths
+    .map((path) => files[path])
+    .filter((file): file is WorkspaceFile => Boolean(file));
   const selectedTab = useWorkspaceUiStore((state) => state.selectedTab);
   const updateConfig = useWorkspaceUiStore((state) => state.updateConfig);
 
@@ -68,26 +70,26 @@ const Workspace = ({ uuid, showFileTree, showTabs, editable }: Props) => {
     isDesktopLayout,
     mobilePane,
   });
-  const {
-    EditorComponent,
-    FileTreeComponent,
-    TerminalPanelComponent,
-  } = useLazyWorkspaceComponents({
-    showTree,
-    isDesktopLayout,
-    mobilePane,
-  });
+  const { EditorComponent, FileTreeComponent, TerminalPanelComponent } =
+    useLazyWorkspaceComponents({
+      showTree,
+      isDesktopLayout,
+      mobilePane,
+    });
 
   if (!isInitialized && status === "loading") return <LoadingHolder />;
   else if (status === "error") {
-    return <div className="size-full flex items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <span className="text-error"><CircleX /></span>
-        <p className="text-xl font-semibold">Error Loading Workspace</p>
+    return (
+      <div className="size-full flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <span className="text-error">
+            <CircleX />
+          </span>
+          <p className="text-xl font-semibold">Error Loading Workspace</p>
+        </div>
       </div>
-    </div>
+    );
   }
-
 
   const renderLoadingPane = (): JSX.Element => (
     <div className="flex h-full items-center justify-center bg-base-100">
@@ -130,7 +132,8 @@ const Workspace = ({ uuid, showFileTree, showTabs, editable }: Props) => {
       return;
     }
 
-    layoutBeforeTerminalExpansion.current = groupRef.current?.getLayout() ?? terminalLayout;
+    layoutBeforeTerminalExpansion.current =
+      groupRef.current?.getLayout() ?? terminalLayout;
     groupRef.current?.setLayout(EXPANDED_TERMINAL_LAYOUT);
     setMaximizeTerminal(true);
   };
@@ -153,7 +156,11 @@ const Workspace = ({ uuid, showFileTree, showTabs, editable }: Props) => {
         id="workspace-terminal-separator"
       />
 
-      <Panel id={PANEL_IDS.terminal} minSize={MIN_TERMINAL_HEIGHT} maxSize="75%">
+      <Panel
+        id={PANEL_IDS.terminal}
+        minSize={MIN_TERMINAL_HEIGHT}
+        maxSize="75%"
+      >
         <div className="size-full min-h-0">
           {TerminalPanelComponent ? (
             <TerminalPanelComponent onMaximize={toggleTerminalExpansion} />
@@ -169,7 +176,11 @@ const Workspace = ({ uuid, showFileTree, showTabs, editable }: Props) => {
     <div className="flex h-full min-h-0 flex-col gap-2">
       <div className="min-h-0 flex-1">{editorPane}</div>
       <div className="h-[38%] min-h-48 overflow-hidden">
-        {TerminalPanelComponent ? <TerminalPanelComponent /> : renderLoadingPane()}
+        {TerminalPanelComponent ? (
+          <TerminalPanelComponent />
+        ) : (
+          renderLoadingPane()
+        )}
       </div>
     </div>
   );
@@ -196,7 +207,11 @@ const Workspace = ({ uuid, showFileTree, showTabs, editable }: Props) => {
             {mobilePane === "editor" && mobileEditorPane}
             {mobilePane === "files" && showTree && (
               <div className="h-full overflow-hidden">
-                {FileTreeComponent ? <FileTreeComponent /> : renderLoadingPane()}
+                {FileTreeComponent ? (
+                  <FileTreeComponent />
+                ) : (
+                  renderLoadingPane()
+                )}
               </div>
             )}
             {mobilePane === "material" && (
@@ -216,43 +231,54 @@ const Workspace = ({ uuid, showFileTree, showTabs, editable }: Props) => {
       {isDesktopLayout && (
         <div className="min-h-0 flex-1">
           <div className="flex h-full min-w-0">
-            {showTree && (isFileTreeCollapsed ? (
-              <div className="flex w-10 shrink-0 justify-center border-r border-base-300 pt-2">
-                <button
-                  className="btn btn-ghost btn-sm btn-square"
-                  onClick={() => setIsFileTreeCollapsed(false)}
-                  aria-label="Expand file manager"
-                  aria-expanded="false"
-                >
-                  <PanelLeftOpen className="size-4" />
-                </button>
-              </div>
-            ) : (
-              <aside className="flex w-72 min-w-60 flex-col border-r border-base-300">
-                <div className="flex items-center justify-between border-b border-base-300 px-3 py-2">
-                  <span className="text-sm font-medium">Files</span>
+            {showTree &&
+              (isFileTreeCollapsed ? (
+                <div className="flex w-10 shrink-0 justify-center border-r border-base-300 pt-2">
                   <button
                     className="btn btn-ghost btn-sm btn-square"
-                    onClick={() => setIsFileTreeCollapsed(true)}
-                    aria-label="Collapse file manager"
-                    aria-expanded="true"
+                    onClick={() => setIsFileTreeCollapsed(false)}
+                    aria-label="Expand file manager"
+                    aria-expanded="false"
                   >
-                    <PanelLeftClose className="size-4" />
+                    <PanelLeftOpen className="size-4" />
                   </button>
                 </div>
-                <div className="min-h-0 flex-1 overflow-hidden">
-                  {FileTreeComponent ? <FileTreeComponent /> : renderLoadingPane()}
-                </div>
-              </aside>
-            ))}
+              ) : (
+                <aside className="flex w-72 min-w-60 flex-col border-r border-base-300">
+                  <div className="flex items-center justify-between border-b border-base-300 px-3 py-2">
+                    <span className="text-sm font-medium">Files</span>
+                    <button
+                      className="btn btn-ghost btn-sm btn-square"
+                      onClick={() => setIsFileTreeCollapsed(true)}
+                      aria-label="Collapse file manager"
+                      aria-expanded="true"
+                    >
+                      <PanelLeftClose className="size-4" />
+                    </button>
+                  </div>
+                  <div className="min-h-0 flex-1 overflow-hidden">
+                    {FileTreeComponent ? (
+                      <FileTreeComponent />
+                    ) : (
+                      renderLoadingPane()
+                    )}
+                  </div>
+                </aside>
+              ))}
 
             <Group
               orientation="horizontal"
               className="min-h-0 min-w-0 flex-1"
               id="workspace-content-group"
             >
-              <Panel id="workspace-main-panel" minSize="320px" defaultSize="55%">
-                <div className="size-full min-h-0 min-w-0">{desktopMainColumn}</div>
+              <Panel
+                id="workspace-main-panel"
+                minSize="320px"
+                defaultSize="55%"
+              >
+                <div className="size-full min-h-0 min-w-0">
+                  {desktopMainColumn}
+                </div>
               </Panel>
 
               <Separator
@@ -260,7 +286,11 @@ const Workspace = ({ uuid, showFileTree, showTabs, editable }: Props) => {
                 id="workspace-material-separator"
               />
 
-              <Panel id="workspace-material-panel" minSize="280px" defaultSize="45%">
+              <Panel
+                id="workspace-material-panel"
+                minSize="280px"
+                defaultSize="45%"
+              >
                 <aside className="flex size-full min-h-0 flex-col bg-base-100">
                   <div className="min-h-0 flex-1 overflow-y-auto">
                     <MarkdownPanel markdown="" />

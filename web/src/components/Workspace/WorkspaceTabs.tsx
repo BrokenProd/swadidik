@@ -18,12 +18,14 @@ const Tab = ({
   onClose: () => void;
 }) => {
   const fileName = file.filePath.split("/").pop() || "untitled";
-  const tabClass = !isActive ? "tab" : "tab tab-active";
+  const tabClass = isActive
+    ? "rounded-t-box border-b-2 border-[#64748b]/60 bg-[#64748b]/20 text-base-content"
+    : "hover:bg-base-300";
 
   return (
-    <div className="flex items-center min-w-[150px]">
+    <div className={`py-1 flex min-w-[150px] items-center ${tabClass}`}>
       <button
-        className={"w-full flex-nowrap " + tabClass}
+        className="tab w-full flex-nowrap border-b-0 bg-transparent hover:bg-transparent"
         onClick={onSelect}
       >
         <p className="w-5/6 overflow-hidden font-semibold text-ellipsis">
@@ -33,7 +35,7 @@ const Tab = ({
 
       {showClose && (
         <button
-          className="btn btn-ghost btn-xs ml-1"
+          className="btn btn-ghost btn-xs mr-1 p-1 bg-transparent"
           onClick={(e) => {
             e.stopPropagation();
             onClose();
@@ -49,40 +51,46 @@ const Tab = ({
 const WorkspaceTabs = () => {
   const tabPaths = useWorkspaceUiStore((state) => state.tabs);
   const files = useFileSystemStore((state) => state.files);
-  const tabs = tabPaths.map((path) => files[path]).filter((file): file is WorkspaceFile => Boolean(file));
+  const tabs = tabPaths
+    .map((path) => files[path])
+    .filter((file): file is WorkspaceFile => Boolean(file));
   const selectedTab = useWorkspaceUiStore((state) => state.selectedTab);
   const setSelectedTab = useWorkspaceUiStore((state) => state.setSelectedTab);
   const removeTab = useWorkspaceUiStore((state) => state.removeTab);
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [canNavigateLeft, setCanNavigateLeft] = useState(currentIndex > 0 && tabs.length > 1);
-  const [canNavigateRight, setCanNavigateRight] = useState(currentIndex < tabs.length - 1 && tabs.length > 1);
+  const [canNavigateLeft, setCanNavigateLeft] = useState(
+    currentIndex > 0 && tabs.length > 1,
+  );
+  const [canNavigateRight, setCanNavigateRight] = useState(
+    currentIndex < tabs.length - 1 && tabs.length > 1,
+  );
 
   const navigate = (direction: "left" | "right") => {
-    const idx = tabs.findIndex(f => f.filePath === selectedTab);
+    const idx = tabs.findIndex((f) => f.filePath === selectedTab);
     if (idx === -1) return;
 
     const newIndex = direction === "left" ? idx - 1 : idx + 1;
     if (newIndex >= 0 && newIndex < tabs.length) {
       setSelectedTab(tabs[newIndex].filePath);
       setCurrentIndex(newIndex);
-      setCanNavigateLeft(newIndex > 0 && tabs.length > 1)
+      setCanNavigateLeft(newIndex > 0 && tabs.length > 1);
       setCanNavigateRight(newIndex < tabs.length - 1 && tabs.length > 1);
     }
   };
 
   useEffect(() => {
     const inner = async () => {
-      const idx = tabs.findIndex(f => f.filePath === selectedTab);
+      const idx = tabs.findIndex((f) => f.filePath === selectedTab);
       if (idx === -1) return;
 
       setCurrentIndex(idx);
-      setCanNavigateLeft(idx > 0 && tabs.length > 1)
+      setCanNavigateLeft(idx > 0 && tabs.length > 1);
       setCanNavigateRight(idx < tabs.length - 1 && tabs.length > 1);
-    }
+    };
 
     inner();
-  }, [selectedTab, tabs])
+  }, [selectedTab, tabs]);
 
   return (
     <div className="bg-base-200 border-b border-base-300 flex items-center gap-2 px-2">
@@ -113,10 +121,10 @@ const WorkspaceTabs = () => {
               key={file.filePath}
               file={file}
               isActive={selectedTab === file.filePath}
-              showClose={tabs.length > 1}
+              showClose
               onSelect={() => {
-                const idx = tabs.findIndex(t => t.filePath === file.filePath);
-                setCurrentIndex(idx)
+                const idx = tabs.findIndex((t) => t.filePath === file.filePath);
+                setCurrentIndex(idx);
                 setSelectedTab(file.filePath);
                 setCanNavigateLeft(idx > 0 && tabs.length > 1);
                 setCanNavigateRight(idx < tabs.length - 1 && tabs.length > 1);
@@ -127,7 +135,7 @@ const WorkspaceTabs = () => {
         </div>
       </div>
     </div>
-  )
+  );
 };
 
 export default WorkspaceTabs;

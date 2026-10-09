@@ -8,11 +8,15 @@ interface NewFileDialogProps {
   onClose: () => void;
 }
 
-export const NewFileDialog = ({ parentPath, onConfirm, onClose }: NewFileDialogProps) => {
+export const NewFileDialog = ({
+  parentPath,
+  onConfirm,
+  onClose,
+}: NewFileDialogProps) => {
   const filenameRef = useRef("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const files = useFileSystemStore(state => state.files);
-  const [filenameInvalid, setFilenameInvalid] = useState("")
+  const files = useFileSystemStore((state) => state.files);
+  const [filenameInvalid, setFilenameInvalid] = useState("");
 
   useEffect(() => {
     if (inputRef.current) {
@@ -38,14 +42,14 @@ export const NewFileDialog = ({ parentPath, onConfirm, onClose }: NewFileDialogP
     const filepath = `${parentPath}/${filename}`;
     if (filename === "") {
       setFilenameInvalid("File name should not empty");
-    } else if (filename.startsWith('.')) {
-      setFilenameInvalid("Name can't be start with \".\"");
-    } else if (filename.endsWith('/')) {
-      setFilenameInvalid(`File name should not ends with "/"`)
+    } else if (filename.startsWith(".")) {
+      setFilenameInvalid('Name can\'t be start with "."');
+    } else if (filename.endsWith("/")) {
+      setFilenameInvalid(`File name should not ends with "/"`);
     } else if (/\s/g.test(filename)) {
-      setFilenameInvalid("File name should not contains whitespace")
+      setFilenameInvalid("File name should not contains whitespace");
     } else if (!/^[a-zA-Z0-9_.-]+$/.test(filename)) {
-      setFilenameInvalid(`Allowed special characters are "_", "-", "."`)
+      setFilenameInvalid(`Allowed special characters are "_", "-", "."`);
     }
 
     if (files[filepath]) {
@@ -55,7 +59,7 @@ export const NewFileDialog = ({ parentPath, onConfirm, onClose }: NewFileDialogP
     }
 
     filenameRef.current = filename;
-  }
+  };
 
   return (
     <div className="modal modal-open">
@@ -79,9 +83,11 @@ export const NewFileDialog = ({ parentPath, onConfirm, onClose }: NewFileDialogP
             <label className="label mt-2">
               <span className="label-text-alt">In: {parentPath}</span>
             </label>
-            {filenameInvalid && <label className="label mt-2">
-              <span className="text-error">{filenameInvalid}</span>
-            </label>}
+            {filenameInvalid && (
+              <label className="label mt-2">
+                <span className="text-error">{filenameInvalid}</span>
+              </label>
+            )}
           </div>
         </div>
         <div className="modal-action">

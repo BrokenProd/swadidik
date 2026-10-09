@@ -12,7 +12,10 @@ const sortFileNodes = (nodes: FileNode[]): FileNode[] => {
   });
 };
 
-export const buildFileTree = (files: WorkspaceFile[], folders: Set<string>): FileNode[] => {
+export const buildFileTree = (
+  files: WorkspaceFile[],
+  folders: Set<string>,
+): FileNode[] => {
   const root: FileNode[] = [];
   const folderMap = new Map<string, FileNode>();
 
@@ -22,7 +25,7 @@ export const buildFileTree = (files: WorkspaceFile[], folders: Set<string>): Fil
 
   const allPaths = new Set<string>();
 
-  folders.forEach(folder => {
+  folders.forEach((folder) => {
     const parts = folder.split("/").filter(Boolean);
     let currentPath = "";
 
@@ -107,7 +110,7 @@ export const buildFileTree = (files: WorkspaceFile[], folders: Set<string>): Fil
     });
   });
 
-  folders.forEach(folderPath => {
+  folders.forEach((folderPath) => {
     const parts = folderPath.split("/").filter(Boolean);
     let currentPath = "";
     let currentLevel = root;
@@ -128,7 +131,7 @@ export const buildFileTree = (files: WorkspaceFile[], folders: Set<string>): Fil
   sortFileNodes(root);
 
   const sortFolderChildren = (nodes: FileNode[]) => {
-    nodes.forEach(node => {
+    nodes.forEach((node) => {
       if (node.type === "folder" && node.children) {
         sortFileNodes(node.children);
         sortFolderChildren(node.children);

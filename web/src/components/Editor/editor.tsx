@@ -1,19 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import { EditorView } from "codemirror";
 import type { WorkspaceFile } from "#/shared/files";
+import { extToContentType } from "#/shared/files";
 import { EditorState } from "@codemirror/state";
 import { setupExtensions } from "./setup";
 import { loadTheme } from "#/shared/themes";
 import { useFileSystemStore } from "#/components/Workspace/fileSystemStore";
 import { useWorkspaceUiStore } from "#/components/Workspace/workspaceUiStore";
-import { getEditor, getEditorPath } from "#/components/Workspace/editorRegistry";
+import {
+  getEditor,
+  getEditorPath,
+} from "#/components/Workspace/editorRegistry";
 import type { ViewUpdate } from "@codemirror/view";
 
 const initializedViews = new WeakSet<EditorView>();
 
 interface EditorProps {
   file: WorkspaceFile;
-  autoSaveTimer?: number
+  autoSaveTimer?: number;
 }
 
 const Editor = ({ file }: EditorProps) => {
@@ -22,7 +26,9 @@ const Editor = ({ file }: EditorProps) => {
 
   const [isInitializing, setInitializing] = useState(false);
   const appearance = useWorkspaceUiStore((state) => state.appearance);
-  const updateFileContent = useFileSystemStore((state) => state.updateFileContent);
+  const updateFileContent = useFileSystemStore(
+    (state) => state.updateFileContent,
+  );
 
   // initialize
   useEffect(() => {
@@ -34,7 +40,9 @@ const Editor = ({ file }: EditorProps) => {
       try {
         const { fontFamily, fontSize, editorTheme } = appearance;
         const initialTheme = await loadTheme(fontFamily, fontSize, editorTheme);
-        const baseExtensions = await setupExtensions(file.contentType);
+        const baseExtensions = await setupExtensions(
+          extToContentType(file.filePath),
+        );
 
         const exts = [
           ...baseExtensions,
@@ -45,7 +53,7 @@ const Editor = ({ file }: EditorProps) => {
               const path = getEditorPath(v.view);
               if (path) updateFileContent(path, v.state.doc.toString());
             }
-          })
+          }),
         ];
 
         const view = getEditor(file.filePath).view;

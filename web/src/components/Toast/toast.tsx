@@ -9,10 +9,10 @@ import {
 type ToastFireInput =
   | string
   | {
-    title?: string;
-    text?: string;
-    icon?: TypeOptions;
-  };
+      title?: string;
+      text?: string;
+      icon?: TypeOptions;
+    };
 
 const resolvePayload = (
   input?: ToastFireInput,
@@ -44,11 +44,7 @@ const loading = (input?: ToastFireInput) => {
   return notify.loading(message, options);
 };
 
-const update = (
-  id: Id,
-  input?: ToastFireInput,
-  options?: ToastOptions,
-) => {
+const update = (id: Id, input?: ToastFireInput, options?: ToastOptions) => {
   const { message, options: resolvedOptions } = resolvePayload(input);
   notify.update(id, {
     render: message,

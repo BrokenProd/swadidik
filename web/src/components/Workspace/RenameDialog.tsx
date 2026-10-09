@@ -59,11 +59,7 @@ export const RenameDialog = ({
             />
           </div>
           <div className="modal-action">
-            <button
-              type="button"
-              className="btn btn-ghost"
-              onClick={onClose}
-            >
+            <button type="button" className="btn btn-ghost" onClick={onClose}>
               Cancel
             </button>
             <button

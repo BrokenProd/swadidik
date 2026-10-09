@@ -6,14 +6,12 @@ import (
 	"strings"
 
 	"codeberg.org/iklabib/swadidik/storage"
-	"codeberg.org/iklabib/swadidik/utils"
 	"github.com/labstack/echo/v5"
 )
 
 type WorkspaceFile struct {
-	FilePath    string `json:"filePath"`
-	Content     string `json:"content"`
-	ContentType string `json:"contentType"`
+	FilePath string `json:"filePath"`
+	Content  string `json:"content"`
 }
 
 func FilesHandler(s3 *storage.S3Client) echo.HandlerFunc {
@@ -47,9 +45,8 @@ func FilesHandler(s3 *storage.S3Client) echo.HandlerFunc {
 			}
 
 			workspaceFile := WorkspaceFile{
-				FilePath:    key,
-				Content:     string(content),
-				ContentType: utils.ExtToContentType(key),
+				FilePath: key,
+				Content:  string(content),
 			}
 
 			files = append(files, workspaceFile)

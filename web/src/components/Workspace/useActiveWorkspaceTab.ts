@@ -19,7 +19,8 @@ export const useActiveWorkspaceTab = ({
   mobilePane,
 }: UseActiveWorkspaceTabOptions) => {
   const activeTab =
-    tabs.find((tab) => tab.filePath === selectedTab)?.filePath ?? tabs[0]?.filePath;
+    tabs.find((tab) => tab.filePath === selectedTab)?.filePath ??
+    tabs[0]?.filePath;
 
   useEffect(() => {
     const editorVisible = isDesktopLayout || mobilePane === "editor";

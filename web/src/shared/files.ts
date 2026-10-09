@@ -11,7 +11,6 @@ type ContentType =
 interface WorkspaceFile {
   filePath: string;
   content: string;
-  contentType: ContentType;
 }
 
 export const extToContentType = (filePath: string) => {

@@ -1,21 +1,21 @@
 @font-face {
-    font-display: swap;
-    font-family: "Fira Code";
-    font-weight: 400;
-    font-style: normal;
-    src:
-        local("Fira Code Regular"),
-        local("FiraCode-Regular"),
-        local("Fira Code"),
-        url("./FiraCode/FiraCode-Regular.ttf") format("truetype");
+  font-display: swap;
+  font-family: "Fira Code";
+  font-weight: 400;
+  font-style: normal;
+  src:
+    local("Fira Code Regular"),
+    local("FiraCode-Regular"),
+    local("Fira Code"),
+    url("./FiraCode/FiraCode-Regular.ttf") format("truetype");
 }
 @font-face {
-    font-display: swap;
-    font-family: "Fira Code";
-    font-weight: 700;
-    font-style: normal;
-    src:
-        local("Fira Code Bold"),
-        local("FiraCode-Bold"),
-        url("./FiraCode/FiraCode-Bold.ttf") format("truetype");
+  font-display: swap;
+  font-family: "Fira Code";
+  font-weight: 700;
+  font-style: normal;
+  src:
+    local("Fira Code Bold"),
+    local("FiraCode-Bold"),
+    url("./FiraCode/FiraCode-Bold.ttf") format("truetype");
 }

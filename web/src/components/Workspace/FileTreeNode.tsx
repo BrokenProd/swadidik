@@ -6,10 +6,10 @@ import {
   FolderOpen,
   FilePlus,
   FolderPlus,
+  File,
   Pen,
   Trash2,
 } from "lucide-react";
-import FileTypeIcon from "#/components/FileTypeIcon";
 import type { WorkspaceFile } from "#/shared/files";
 import { useWorkspaceUiStore } from "./workspaceUiStore";
 
@@ -43,15 +43,19 @@ export const FileTreeNode = ({
   onDelete,
   selectedPath,
 }: FileTreeNodeProps) => {
-  const expandedFolders = useWorkspaceUiStore(state => state.expandedFolders);
-  const toggleFolderExpanded = useWorkspaceUiStore(state => state.toggleFolderExpanded);
+  const expandedFolders = useWorkspaceUiStore((state) => state.expandedFolders);
+  const toggleFolderExpanded = useWorkspaceUiStore(
+    (state) => state.toggleFolderExpanded,
+  );
   const [isHovered, setIsHovered] = useState(false);
 
   const isSelected = selectedPath === node.path;
   const paddingLeft = level * 12;
   const isRoot = node.isRoot;
 
-  const editableWorkspace = useWorkspaceUiStore(state => state.config.editable);
+  const editableWorkspace = useWorkspaceUiStore(
+    (state) => state.config.editable,
+  );
 
   // check if this folder is expanded from the store
   const isOpen = isRoot || expandedFolders.has(node.path);
@@ -59,20 +63,22 @@ export const FileTreeNode = ({
   if (node.type === "file" && node.file) {
     return (
       <div
-        className={`flex items-center gap-2 px-2 py-1.5 cursor-pointer hover:bg-primary/20 transition-colors ${isSelected ? "bg-base-300" : ""
-          }`}
+        className={`flex items-center gap-2 px-2 py-1.5 cursor-pointer hover:bg-primary/20 transition-colors ${
+          isSelected ? "bg-base-300" : ""
+        }`}
         style={{ paddingLeft: `${paddingLeft + 8}px` }}
         onClick={() => onFileSelect(node.file!)}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <FileTypeIcon language={node.file.contentType} />
+        <File className="size-4 shrink-0" />
         <span className="text-sm flex-1 truncate">{node.name}</span>
 
         {editableWorkspace && (
           <div
-            className={`flex gap-0.5 shrink-0 transition-opacity ${isHovered ? "opacity-100" : "opacity-0"
-              }`}
+            className={`flex gap-0.5 shrink-0 transition-opacity ${
+              isHovered ? "opacity-100" : "opacity-0"
+            }`}
           >
             <button
               className="btn btn-ghost btn-xs btn-square"
@@ -105,8 +111,9 @@ export const FileTreeNode = ({
     return (
       <div>
         <div
-          className={`flex items-center gap-2 px-2 py-1.5 transition-colors group cursor-pointer hover:bg-primary/30 ${isSelected ? "bg-base-300" : ""
-            }`}
+          className={`flex items-center gap-2 px-2 py-1.5 transition-colors group cursor-pointer hover:bg-primary/30 ${
+            isSelected ? "bg-base-300" : ""
+          }`}
           style={{ paddingLeft: `${paddingLeft + 8}px` }}
           onClick={() => !isRoot && toggleFolderExpanded(node.path)}
           onMouseEnter={() => setIsHovered(true)}
@@ -126,12 +133,15 @@ export const FileTreeNode = ({
           ) : (
             <Folder className="size-4 shrink-0 text-primary" />
           )}
-          <span className="text-sm font-medium flex-1 truncate">{node.name}</span>
+          <span className="text-sm font-medium flex-1 truncate">
+            {node.name}
+          </span>
 
           {editableWorkspace && (
             <div
-              className={`flex gap-0.5 shrink-0 transition-opacity ${isHovered ? "opacity-100" : "opacity-0"
-                }`}
+              className={`flex gap-0.5 shrink-0 transition-opacity ${
+                isHovered ? "opacity-100" : "opacity-0"
+              }`}
             >
               <button
                 className="btn btn-ghost btn-xs btn-square"

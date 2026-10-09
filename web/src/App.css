@@ -1,37 +1,37 @@
 .scrollbar-hide::-webkit-scrollbar {
-    display: none;
+  display: none;
 }
 
 .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 @keyframes slide-in-right {
-    from {
-        transform: translateX(100%);
-    }
+  from {
+    transform: translateX(100%);
+  }
 
-    to {
-        transform: translateX(0);
-    }
+  to {
+    transform: translateX(0);
+  }
 }
 
 .animate-slide-in-right {
-    animation: slide-in-right 0.3s ease-out;
+  animation: slide-in-right 0.3s ease-out;
 }
 
 /* Optional: Add slide-out animation for smoother closing */
 @keyframes slide-out-right {
-    from {
-        transform: translateX(0);
-    }
+  from {
+    transform: translateX(0);
+  }
 
-    to {
-        transform: translateX(100%);
-    }
+  to {
+    transform: translateX(100%);
+  }
 }
 
 .animate-slide-out-right {
-    animation: slide-out-right 0.3s ease-in;
+  animation: slide-out-right 0.3s ease-in;
 }

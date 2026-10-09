@@ -17,8 +17,10 @@ export const useLazyWorkspaceComponents = ({
   isDesktopLayout,
   mobilePane,
 }: UseLazyWorkspaceComponentsOptions) => {
-  const [EditorComponent, setEditorComponent] = useState<EditorComponentType | null>(null);
-  const [FileTreeComponent, setFileTreeComponent] = useState<FileTreeComponentType | null>(null);
+  const [EditorComponent, setEditorComponent] =
+    useState<EditorComponentType | null>(null);
+  const [FileTreeComponent, setFileTreeComponent] =
+    useState<FileTreeComponentType | null>(null);
   const [TerminalPanelComponent, setTerminalPanelComponent] =
     useState<TerminalPanelComponentType | null>(null);
 
@@ -60,7 +62,9 @@ export const useLazyWorkspaceComponents = ({
     let cancelled = false;
     import("./TerminalPanel").then((mod) => {
       if (!cancelled) {
-        setTerminalPanelComponent(() => mod.default as TerminalPanelComponentType);
+        setTerminalPanelComponent(
+          () => mod.default as TerminalPanelComponentType,
+        );
       }
     });
 

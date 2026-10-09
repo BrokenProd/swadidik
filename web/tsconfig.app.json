@@ -24,12 +24,8 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     "paths": {
-      "#/*": [
-        "./src/*"
-      ],
-      "#packages/*": [
-        "./packages/*"
-      ]
+      "#/*": ["./src/*"],
+      "#packages/*": ["./packages/*"]
     }
   },
   "include": ["src"]

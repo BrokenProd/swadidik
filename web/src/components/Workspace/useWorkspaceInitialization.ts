@@ -4,7 +4,7 @@ import { useFileSystemStore } from "./fileSystemStore";
 import { useWorkspaceUiStore } from "./workspaceUiStore";
 
 interface UseWorkspaceInitializationOptions {
-  uuid: string
+  uuid: string;
   showTabs?: boolean;
   editable?: boolean;
   updateConfig: (config: Partial<WorkspaceConfig>) => void;
@@ -17,7 +17,9 @@ export const useWorkspaceInitialization = ({
   updateConfig,
 }: UseWorkspaceInitializationOptions) => {
   const [isInitialized, setIsInitialized] = useState(false);
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const [status, setStatus] = useState<"loading" | "success" | "error">(
+    "loading",
+  );
 
   useEffect(() => {
     if (showTabs !== undefined) {
@@ -37,12 +39,27 @@ export const useWorkspaceInitialization = ({
       try {
         const { loadWorkspaceFiles } = await import("./files");
         const ws = await loadWorkspaceFiles(uuid);
+        const preferredFile =
+          ws.files.find(
+            ({ filePath }) => filePath.split("/").pop() === "Main.java",
+          ) ??
+          ws.files.find(
+            ({ filePath }) => filePath.split("/").pop() === "main.py",
+          );
+        const tabPaths = ws.files.map((file) => file.filePath);
+
+        if (preferredFile) {
+          tabPaths.splice(tabPaths.indexOf(preferredFile.filePath), 1);
+          tabPaths.unshift(preferredFile.filePath);
+        }
 
         useFileSystemStore.getState().hydrate(ws.files);
-        useWorkspaceUiStore.getState().initializeTabs(
-          ws.files.map((file) => file.filePath),
-          ws.files[0]?.filePath ?? "",
-        );
+        useWorkspaceUiStore
+          .getState()
+          .initializeTabs(
+            tabPaths,
+            preferredFile?.filePath ?? tabPaths[0] ?? "",
+          );
         setIsInitialized(true);
         setStatus("success");
       } catch {

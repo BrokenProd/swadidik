@@ -7,7 +7,11 @@ interface NewFolderDialogProps {
   onClose: () => void;
 }
 
-export const NewFolderDialog = ({ parentPath, onConfirm, onClose }: NewFolderDialogProps) => {
+export const NewFolderDialog = ({
+  parentPath,
+  onConfirm,
+  onClose,
+}: NewFolderDialogProps) => {
   const [folderName, setFolderName] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 

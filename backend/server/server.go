@@ -14,15 +14,20 @@ func NewServer(config entities.Config) *echo.Echo {
 	e := echo.New()
 	e.Use(echomiddleware.BodyLimit(1 << 20))
 	e.Use(echomiddleware.Recover())
-	e.Use(echomiddleware.CORS("http://localhost:5173", "*"))
+	e.Use(echomiddleware.CORSWithConfig(echomiddleware.CORSConfig{
+		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowCredentials: true,
+	}))
 
 	jwtService := utils.NewJWTService(config)
 
 	authGroup := e.Group("/auth")
 	authGroup.POST("/token", handlers.TokenHandler(jwtService))
 	authGroup.POST("/refresh", handlers.RefreshTokenHandler(jwtService))
+	authGroup.POST("/logout", handlers.LogoutHandler())
 
 	jwtMiddleware := echojwt.Config{
+		TokenLookup: "cookie:access_token",
 		ParseTokenFunc: func(c *echo.Context, auth string) (interface{}, error) {
 			return jwtService.Verify(auth, "access")
 		},

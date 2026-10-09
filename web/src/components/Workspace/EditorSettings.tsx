@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Settings2, X, Moon, Sun } from "lucide-react";
 import { useFileSystemStore } from "./fileSystemStore";
 import { useWorkspaceUiStore } from "./workspaceUiStore";
@@ -30,10 +30,16 @@ const EditorSettings = () => {
   const files = useFileSystemStore((state) => state.files);
 
   const [open, setOpen] = useState(false);
-  const settings = useWorkspaceUiStore(state => state.appearance);
-  const setSettings = useWorkspaceUiStore(state => state.updateAppearance);
+  const settings = useWorkspaceUiStore((state) => state.appearance);
+  const setSettings = useWorkspaceUiStore((state) => state.updateAppearance);
 
   const fonts = useMemo(() => ["JetBrains Mono", "Fira Code"], []);
+  const isLightMode = settings.editorTheme === "TOKYO_NIGHT_DAY";
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = isLightMode ? "light" : "dark";
+    document.documentElement.style.colorScheme = isLightMode ? "light" : "dark";
+  }, [isLightMode]);
 
   const handleChange = async (field: string, value: string | number) => {
     const theme = {
@@ -44,31 +50,29 @@ const EditorSettings = () => {
     EditorAppearance.save(theme);
     setSettings(theme);
 
-    const file = files[selectedTab];
-    if (file) {
-      const { fontSize, fontFamily } = theme;
-      await loadFont(fontFamily, fontSize);
-      updateTheme(file, theme);
-    }
+    const { fontSize, fontFamily } = theme;
+    await loadFont(fontFamily, fontSize);
+    await Promise.all(
+      Object.values(files).map((file) => updateTheme(file, theme)),
+    );
   };
 
   const change = (state: boolean) => {
     setOpen(state);
 
     if (!state) {
-      Object.values(files).filter((f) => f.filePath !== selectedTab).forEach((f) => updateTheme(f, settings));
+      Object.values(files)
+        .filter((f) => f.filePath !== selectedTab)
+        .forEach((f) => updateTheme(f, settings));
     }
   };
 
   return (
     <>
-      <button
-        className="btn btn-ghost btn-sm"
-        onClick={() => setOpen(true)}
-      >
+      <button className="btn btn-ghost btn-sm" onClick={() => setOpen(true)}>
         <Settings2 />
         <span className="inline">Settings</span>
-      </button >
+      </button>
 
       <input
         type="checkbox"
@@ -95,14 +99,17 @@ const EditorSettings = () => {
               </label>
               <fieldset className="fieldset">
                 <label className="toggle toggle-xl text-base-content">
-                  <input type="checkbox"
-                    defaultChecked={settings.editorTheme === "TOKYO_NIGHT_DAY"}
-                    onClick={() => {
-                      const editorTheme = settings.editorTheme === "TOKYO_NIGHT"
-                        ? "TOKYO_NIGHT_DAY"
-                        : "TOKYO_NIGHT";
-                      handleChange("editorTheme", editorTheme);
-                    }}
+                  <input
+                    type="checkbox"
+                    checked={isLightMode}
+                    onChange={(event) =>
+                      handleChange(
+                        "editorTheme",
+                        event.currentTarget.checked
+                          ? "TOKYO_NIGHT_DAY"
+                          : "TOKYO_NIGHT",
+                      )
+                    }
                   />
                   <Moon />
                   <Sun />

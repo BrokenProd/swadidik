@@ -14,6 +14,8 @@ const (
 	refreshTokenLifetime = 7 * 24 * time.Hour
 	tokenTypeAccess      = "access"
 	tokenTypeRefresh     = "refresh"
+	accessCookieName     = "access_token"
+	refreshCookieName    = "refresh_token"
 )
 
 var defaultRoles = []string{"user"}
@@ -21,17 +23,18 @@ var defaultRoles = []string{"user"}
 func TokenHandler(jwt utils.JWTService) echo.HandlerFunc {
 	return func(c *echo.Context) error {
 		var req entities.TokenRequest
-		if err := c.Bind(&req); err != nil || req.UserName == "" {
+		if err := c.Bind(&req); err != nil || req.Email == "" {
 			return c.JSON(http.StatusBadRequest,
 				map[string]string{"error": "invalid token request"})
 		}
 
-		resp, err := issueTokenPair(jwt, req.UserName)
+		resp, err := issueTokenPair(jwt, req.Email, req.Remember)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError,
 				map[string]string{"error": "could not generate token"})
 		}
 
+		setTokenCookies(c, resp)
 		setNoStoreHeaders(c)
 		return c.JSON(http.StatusOK, resp)
 	}
@@ -39,49 +42,115 @@ func TokenHandler(jwt utils.JWTService) echo.HandlerFunc {
 
 func RefreshTokenHandler(jwt utils.JWTService) echo.HandlerFunc {
 	return func(c *echo.Context) error {
-		var req entities.RefreshTokenRequest
-		if err := c.Bind(&req); err != nil || req.RefreshToken == "" {
+		refreshCookie, err := c.Cookie(refreshCookieName)
+		if err != nil || refreshCookie.Value == "" {
 			return c.JSON(http.StatusBadRequest,
 				map[string]string{"error": "invalid refresh token request"})
 		}
 
-		claims, err := jwt.Verify(req.RefreshToken, tokenTypeRefresh)
+		claims, err := jwt.Verify(refreshCookie.Value, tokenTypeRefresh)
 		if err != nil {
 			return c.JSON(http.StatusUnauthorized,
 				map[string]string{"error": "invalid or expired refresh token"})
 		}
 
-		resp, err := issueTokenPair(jwt, claims.Subject)
+		resp, err := issueTokenPair(jwt, claims.Subject, claims.Persistent)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError,
 				map[string]string{"error": "could not generate token"})
 		}
 
+		setTokenCookies(c, resp)
 		setNoStoreHeaders(c)
 		return c.JSON(http.StatusOK, resp)
 	}
 }
 
-func issueTokenPair(jwt utils.JWTService, user string) (entities.TokenResponse, error) {
-	access, accessExpiresAt, err := jwt.Issue(user, tokenTypeAccess, accessTokenLifetime)
+func LogoutHandler() echo.HandlerFunc {
+	return func(c *echo.Context) error {
+		clearTokenCookies(c)
+		setNoStoreHeaders(c)
+		return c.NoContent(http.StatusNoContent)
+	}
+}
+
+type tokenPair struct {
+	entities.TokenResponse
+	accessToken  string
+	refreshToken string
+	persistent   bool
+}
+
+func issueTokenPair(jwt utils.JWTService, email string, persistent bool) (tokenPair, error) {
+	access, accessExpiresAt, err := jwt.Issue(email, tokenTypeAccess, accessTokenLifetime, persistent)
 	if err != nil {
-		return entities.TokenResponse{}, err
+		return tokenPair{}, err
 	}
 
-	refresh, _, err := jwt.Issue(user, tokenTypeRefresh, refreshTokenLifetime)
+	refresh, _, err := jwt.Issue(email, tokenTypeRefresh, refreshTokenLifetime, persistent)
 
 	if err != nil {
-		return entities.TokenResponse{}, err
+		return tokenPair{}, err
 	}
 
-	tokenResp := entities.TokenResponse{
-		AccessToken:  access,
-		RefreshToken: refresh,
+	return tokenPair{
 		ExpiresAt:    accessExpiresAt.Unix(),
 		Roles:        defaultRoles,
+		accessToken:  access,
+		refreshToken: refresh,
+		persistent:   persistent,
+	}, nil
+}
+
+func setTokenCookies(c *echo.Context, tokens tokenPair) {
+	accessCookie := &http.Cookie{
+		Name:     accessCookieName,
+		Value:    tokens.accessToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	}
+	refreshCookie := &http.Cookie{
+		Name:     refreshCookieName,
+		Value:    tokens.refreshToken,
+		Path:     "/auth",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
 	}
 
-	return tokenResp, nil
+	if tokens.persistent {
+		accessCookie.MaxAge = int(accessTokenLifetime.Seconds())
+		refreshCookie.MaxAge = int(refreshTokenLifetime.Seconds())
+	}
+
+	c.SetCookie(accessCookie)
+	c.SetCookie(refreshCookie)
+}
+
+func clearTokenCookies(c *echo.Context) {
+	expiresAt := time.Unix(0, 0)
+	c.SetCookie(&http.Cookie{
+		Name:     accessCookieName,
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   -1,
+		Expires:  expiresAt,
+	})
+	c.SetCookie(&http.Cookie{
+		Name:     refreshCookieName,
+		Value:    "",
+		Path:     "/auth",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   -1,
+		Expires:  expiresAt,
+	})
 }
 
 func setNoStoreHeaders(c *echo.Context) {

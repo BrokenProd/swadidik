@@ -12,7 +12,10 @@ export default defineConfig(({ command }) => {
         output: {
           manualChunks(id) {
             if (id.includes("node_modules")) {
-              return id.toString().split("node_modules/")[1].split("/")[0]
+              return id
+                .toString()
+                .split("node_modules/")[1]
+                .split("/")[0]
                 .toString();
             }
           },
@@ -22,16 +25,16 @@ export default defineConfig(({ command }) => {
     worker: {
       format: "es",
     },
-    server: command !== "serve" ? undefined : {
-      headers: {
-        "Cross-Origin-Embedder-Policy": "require-corp",
-        "Cross-Origin-Opener-Policy": "same-origin",
-      },
-    },
-    plugins: [
-      tailwindcss(),
-      react(),
-    ],
+    server:
+      command !== "serve"
+        ? undefined
+        : {
+            headers: {
+              "Cross-Origin-Embedder-Policy": "require-corp",
+              "Cross-Origin-Opener-Policy": "same-origin",
+            },
+          },
+    plugins: [tailwindcss(), react()],
     resolve: {
       alias: {
         "#": path.resolve(__dirname, "./src"),
