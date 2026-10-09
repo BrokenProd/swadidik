@@ -59,15 +59,11 @@ func (java *Java) Build() error {
 		return fmt.Errorf("javac failed: %v\n%s", err, output)
 	}
 
-	fmt.Print(string(output))
-
 	commandArgs := []string{
-		"-c",
-		"-f", "main.jar",
-		"-e", "Main",
+		"cfe", "main.jar",
+		"Main", ".",
 	}
 
-	commandArgs = append(commandArgs, fileNames...)
 	cmd = exec.Command("/opt/jdk/bin/jar", commandArgs...)
 	cmd.Dir = java.Workdir
 
