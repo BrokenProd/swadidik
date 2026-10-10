@@ -11,6 +11,8 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/labstack/echo-jwt/v5 v5.0.2
 	github.com/labstack/echo/v5 v5.3.1
+	github.com/lib/pq v1.12.3
+	golang.org/x/crypto v0.58.0
 )
 
 require (
