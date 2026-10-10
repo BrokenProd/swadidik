@@ -50,14 +50,6 @@ func Connect(databaseUrl string) (*sql.DB, error) {
 			return
 		}
 
-		if _, migrationErr := database.ExecContext(ctx, `
-			ALTER TABLE users
-			ADD COLUMN IF NOT EXISTS name VARCHAR(255) NOT NULL DEFAULT ''`); migrationErr != nil {
-			database.Close()
-			err = fmt.Errorf("add users.name column: %w", migrationErr)
-			return
-		}
-
 		dbInstance = database
 	})
 
