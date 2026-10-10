@@ -54,11 +54,11 @@ const LoginPage = ({ onAuthenticated }: LoginPageProps) => {
     };
 
     return (
-        <main className="min-h-screen bg-[#f7f8fc] p-4 sm:p-6 lg:p-8">
+        <main className="min-h-screen bg-[#f7f8fc] p-4 sm:p-6 lg:p-8 dark:bg-slate-950">
             <section className="flex items-center justify-center px-5 py-10 sm:px-10 lg:px-16">
                 <div className="w-full max-w-md">
                     <div className="mb-10 lg:hidden">
-                        <div className="flex items-center gap-3 text-lg font-bold text-[#182a51]">
+                        <div className="flex items-center gap-3 text-lg font-bold text-[#182a51] dark:text-slate-100">
                             Swadidik
                         </div>
                     </div>
@@ -67,17 +67,17 @@ const LoginPage = ({ onAuthenticated }: LoginPageProps) => {
                         <p className="mb-2 text-sm font-semibold text-[#18a991]">
                             SELAMAT DATANG KEMBALI
                         </p>
-                        <h2 className="text-3xl font-bold tracking-tight text-slate-900">
+                        <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                             Masuk ke akunmu
                         </h2>
-                        <p className="mt-3 text-sm leading-6 text-slate-500">
+                        <p className="mt-3 text-sm leading-6 text-slate-500 dark:text-slate-400">
                             Masukkan detail akunmu untuk melanjutkan belajar.
                         </p>
                     </div>
 
                     <form className="space-y-5" onSubmit={handleSubmit} noValidate>
                         <label className="block">
-                            <span className="mb-2 block text-sm font-semibold text-slate-700">
+                            <span className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">
                                 Email
                             </span>
                             <span className="relative block">
@@ -90,13 +90,13 @@ const LoginPage = ({ onAuthenticated }: LoginPageProps) => {
                                     type="email"
                                     autoComplete="email"
                                     placeholder="nama@email.com"
-                                    className="h-12 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#23b79f] focus:ring-4 focus:ring-[#23b79f]/10"
+                                    className="h-12 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#23b79f] focus:ring-4 focus:ring-[#23b79f]/10 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                                 />
                             </span>
                         </label>
 
                         <label className="block">
-                            <span className="mb-2 flex items-center justify-between text-sm font-semibold text-slate-700">
+                            <span className="mb-2 flex items-center justify-between text-sm font-semibold text-slate-700 dark:text-slate-200">
                                 Kata sandi
                                 <a
                                     href="#forgot-password"
@@ -115,12 +115,12 @@ const LoginPage = ({ onAuthenticated }: LoginPageProps) => {
                                     type={showPassword ? "text" : "password"}
                                     autoComplete="current-password"
                                     placeholder="Masukkan kata sandi"
-                                    className="h-12 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-12 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#23b79f] focus:ring-4 focus:ring-[#23b79f]/10"
+                                    className="h-12 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-12 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#23b79f] focus:ring-4 focus:ring-[#23b79f]/10 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                                    className="absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
                                     aria-label={
                                         showPassword
                                             ? "Sembunyikan kata sandi"
@@ -134,7 +134,7 @@ const LoginPage = ({ onAuthenticated }: LoginPageProps) => {
 
                         {error && (
                             <p
-                                className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600"
+                                className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950/50 dark:text-red-300"
                                 role="alert"
                             >
                                 {error}
@@ -150,7 +150,7 @@ const LoginPage = ({ onAuthenticated }: LoginPageProps) => {
                         </button>
                     </form>
 
-                    <p className="mt-8 text-center text-sm text-slate-500">
+                    <p className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
                         Belum punya akun?{" "}
                         <Link
                             to="/register"

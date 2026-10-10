@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
-import { Navigate, Route, Routes } from "react-router";
+import { Navigate, Route, Routes, useLocation } from "react-router";
 import { logoutSession, refreshSession } from "#/shared/api";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegistrationPage from "./pages/RegistrationPage";
 import WorkspacePage from "./pages/WorkspacePage";
+import ThemeToggle from "./components/ThemeToggle";
 
 function App() {
+  const location = useLocation();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -32,14 +34,17 @@ function App() {
 
   if (isAuthenticated === null) {
     return (
-      <div className="grid h-screen place-items-center bg-[#f7f8fc] text-sm text-slate-500">
-        Memuat sesi...
-      </div>
+      <>
+        <div className="grid h-screen place-items-center bg-[#f7f8fc] text-sm text-slate-500 dark:bg-slate-950 dark:text-slate-400">
+          Memuat sesi...
+        </div>
+        <ThemeToggle />
+      </>
     );
   }
 
   if (isAuthenticated) {
-    return (
+    return <>
       <Routes>
         <Route path="/workspace" element={<WorkspacePage />} />
         <Route path="/login" element={<Navigate to="/" replace />} />
@@ -47,10 +52,11 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
         <Route path="/" element={<HomePage onLogout={handleLogout} />} />
       </Routes>
-    );
+      {!location.pathname.startsWith("/workspace") && <ThemeToggle />}
+    </>;
   }
 
-  return (
+  return <>
     <Routes>
       <Route
         path="/login"
@@ -59,7 +65,8 @@ function App() {
       <Route path="/register" element={<RegistrationPage />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
-  );
+    <ThemeToggle />
+  </>;
 }
 
 export default App;

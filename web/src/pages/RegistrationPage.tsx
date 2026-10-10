@@ -6,13 +6,14 @@ import {
     UserRound,
 } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { apiBaseUrl } from "#/shared/api";
 
 const inputClass =
-    "h-12 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#23b79f] focus:ring-4 focus:ring-[#23b79f]/10";
+    "h-12 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#23b79f] focus:ring-4 focus:ring-[#23b79f]/10 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100";
 
 const RegistrationPage = () => {
+    const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState("");
 
@@ -41,7 +42,7 @@ const RegistrationPage = () => {
         setError("");
 
         try {
-            const response = await fetch(`${apiBaseUrl}/api/signup`, {
+            const response = await fetch(`${apiBaseUrl}/auth/register`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -50,46 +51,47 @@ const RegistrationPage = () => {
                     name,
                     email,
                     password,
-                    confirmation,
                 }),
             });
 
-            const data = await response.json();
+            const data = (await response.json().catch(() => null)) as {
+                error?: string;
+            } | null;
 
             if (!response.ok) {
-                setError(data.message || "Gagal mendaftar. Silakan coba lagi.");
+                setError(data?.error || "Gagal mendaftar. Silakan coba lagi.");
                 return;
             }
-            // TODO: redirect
-        } catch (err) {
+            navigate("/login", { replace: true });
+        } catch {
             setError("Terjadi kesalahan jaringan. Periksa koneksi Anda.");
         }
     };
 
 
     return (
-        <main className="min-h-screen bg-[#f7f8fc] p-4 sm:p-6 lg:p-8">
+        <main className="min-h-screen bg-[#f7f8fc] p-4 sm:p-6 lg:p-8 dark:bg-slate-950">
             <section className="flex items-center justify-center px-5 py-10 sm:px-10 lg:px-16">
                 <div className="w-full max-w-md">
-                    <div className="mb-8 flex items-center gap-3 text-lg font-bold text-[#182a51] lg:hidden">
+                    <div className="mb-8 flex items-center gap-3 text-lg font-bold text-[#182a51] dark:text-slate-100 lg:hidden">
                         Swadidik
                     </div>
                     <div className="mb-7">
                         <p className="mb-2 text-sm font-semibold text-[#18a991]">
                             MULAI SEKARANG
                         </p>
-                        <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+                        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                             Buat akun baru
                         </h1>
-                        <p className="mt-3 text-sm leading-6 text-slate-500">
+                        <p className="mt-3 text-sm leading-6 text-slate-500 dark:text-slate-400">
                             Daftar gratis dan mulai perjalanan belajarmu hari ini.
                         </p>
                     </div>
 
                     <form className="space-y-4" onSubmit={handleSubmit} noValidate>
                         <label className="block">
-                            <span className="mb-2 block text-sm font-semibold text-slate-700">
-                                Nama lengkap
+                            <span className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">
+                                Nama
                             </span>
                             <span className="relative block">
                                 <UserRound
@@ -105,7 +107,7 @@ const RegistrationPage = () => {
                             </span>
                         </label>
                         <label className="block">
-                            <span className="mb-2 block text-sm font-semibold text-slate-700">
+                            <span className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">
                                 Email
                             </span>
                             <span className="relative block">
@@ -123,7 +125,7 @@ const RegistrationPage = () => {
                             </span>
                         </label>
                         <label className="block">
-                            <span className="mb-2 block text-sm font-semibold text-slate-700">
+                            <span className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">
                                 Kata sandi
                             </span>
                             <span className="relative block">
@@ -141,7 +143,7 @@ const RegistrationPage = () => {
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-slate-400 hover:bg-slate-100"
+                                    className="absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                                     aria-label={
                                         showPassword
                                             ? "Sembunyikan kata sandi"
@@ -153,7 +155,7 @@ const RegistrationPage = () => {
                             </span>
                         </label>
                         <label className="block">
-                            <span className="mb-2 block text-sm font-semibold text-slate-700">
+                            <span className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">
                                 Konfirmasi kata sandi
                             </span>
                             <span className="relative block">
@@ -172,7 +174,7 @@ const RegistrationPage = () => {
                         </label>
                         {error && (
                             <p
-                                className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700"
+                                className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:bg-amber-950/50 dark:text-amber-200"
                                 role="alert"
                             >
                                 {error}
@@ -185,7 +187,7 @@ const RegistrationPage = () => {
                             Buat akun
                         </button>
                     </form>
-                    <p className="mt-7 text-center text-sm text-slate-500">
+                    <p className="mt-7 text-center text-sm text-slate-500 dark:text-slate-400">
                         Sudah punya akun?{" "}
                         <Link
                             to="/login"

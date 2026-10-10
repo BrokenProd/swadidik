@@ -14,11 +14,6 @@ const courses: Course[] = [
     level: "Pemula",
   },
   {
-    title: "JavaScript untuk Pemula",
-    description: "Pelajari fondasi JavaScript untuk membangun interaksi di halaman web.",
-    level: "Pemula",
-  },
-  {
     title: "Pemrograman Java",
     description: "Bangun pemahaman tentang tipe data, class, dan object pada Java.",
     level: "Pemula",
@@ -48,17 +43,16 @@ const HomePage = ({ onLogout }: HomePageProps) => {
   };
 
   return (
-    <main className="min-h-screen bg-[#f7f8fc] text-slate-900">
-      <header className="border-b border-slate-200 bg-white">
+    <main className="min-h-screen bg-[#f7f8fc] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+      <header className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-8">
-          <span className="text-lg font-bold text-[#182a51]">Swadidik</span>
+          <span className="text-lg font-bold text-[#182a51] dark:text-slate-100">Swadidik</span>
           <div className="flex items-center gap-4">
-            <span className="hidden text-sm font-medium text-slate-500 sm:inline">Ruang belajarku</span>
             <button
               type="button"
               onClick={() => void handleLogout()}
               disabled={isLoggingOut}
-              className="rounded-lg px-3 py-2 text-sm font-semibold text-[#182a51] transition hover:bg-slate-100 disabled:cursor-wait disabled:opacity-60"
+              className="rounded-lg px-3 py-2 text-sm font-semibold text-[#182a51] transition hover:bg-slate-100 disabled:cursor-wait disabled:opacity-60 dark:text-slate-100 dark:hover:bg-slate-800"
             >
               {isLoggingOut ? "Keluar..." : "Keluar"}
             </button>
@@ -77,12 +71,9 @@ const HomePage = ({ onLogout }: HomePageProps) => {
           <p className="mb-3 text-sm font-semibold tracking-wide text-[#159d88]">
             BELAJAR SESUAI KECEPATANMU
           </p>
-          <h1 className="text-3xl font-bold tracking-tight text-[#182a51] sm:text-4xl">
+          <h1 className="text-3xl font-bold tracking-tight text-[#4e5f85] sm:text-4xl">
             Pilih kursus untuk mulai belajar
           </h1>
-          <p className="mt-4 text-base leading-7 text-slate-600">
-            Semua materi dirancang untuk dipelajari langkah demi langkah dan dipraktikkan langsung di workspace.
-          </p>
         </div>
 
         <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -90,15 +81,15 @@ const HomePage = ({ onLogout }: HomePageProps) => {
             return (
               <article
                 key={course.title}
-                className="flex min-h-72 flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                className="flex min-h-72 flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900"
               >
                 <div>
-                  <div className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-500">
+                  <div className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400">
                     <CheckCircle2 size={16} className="text-[#18a991]" aria-hidden="true" />
                     {course.level}
                   </div>
-                  <h2 className="text-xl font-bold text-[#182a51]">{course.title}</h2>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">{course.description}</p>
+                  <h2 className="text-xl font-bold text-[#182a51] dark:text-slate-100">{course.title}</h2>
+                  <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-400">{course.description}</p>
                 </div>
               </article>
             );
