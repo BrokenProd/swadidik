@@ -1,6 +1,8 @@
 package server
 
 import (
+	"database/sql"
+
 	"codeberg.org/iklabib/swadidik/entities"
 	"codeberg.org/iklabib/swadidik/handlers"
 	"codeberg.org/iklabib/swadidik/storage"
@@ -10,7 +12,7 @@ import (
 	echomiddleware "github.com/labstack/echo/v5/middleware"
 )
 
-func NewServer(config entities.Config) *echo.Echo {
+func NewServer(config entities.Config, database *sql.DB) *echo.Echo {
 	e := echo.New()
 	e.Use(echomiddleware.BodyLimit(1 << 20))
 	e.Use(echomiddleware.Recover())
@@ -22,7 +24,8 @@ func NewServer(config entities.Config) *echo.Echo {
 	jwtService := utils.NewJWTService(config)
 
 	authGroup := e.Group("/auth")
-	authGroup.POST("/token", handlers.TokenHandler(jwtService))
+	authGroup.POST("/register", handlers.RegisterHandler(database))
+	authGroup.POST("/token", handlers.TokenHandler(jwtService, database))
 	authGroup.POST("/refresh", handlers.RefreshTokenHandler(jwtService))
 	authGroup.POST("/logout", handlers.LogoutHandler())
 

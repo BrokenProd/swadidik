@@ -1,12 +1,17 @@
 package handlers
 
 import (
+	"database/sql"
+	"errors"
 	"net/http"
+	"strings"
 	"time"
 
+	"codeberg.org/iklabib/swadidik/db"
 	"codeberg.org/iklabib/swadidik/entities"
 	"codeberg.org/iklabib/swadidik/utils"
 	"github.com/labstack/echo/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -20,15 +25,32 @@ const (
 
 var defaultRoles = []string{"user"}
 
-func TokenHandler(jwt utils.JWTService) echo.HandlerFunc {
+func TokenHandler(jwt utils.JWTService, database *sql.DB) echo.HandlerFunc {
 	return func(c *echo.Context) error {
 		var req entities.TokenRequest
-		if err := c.Bind(&req); err != nil || req.Email == "" {
+		if err := c.Bind(&req); err != nil || req.Email == "" || req.Password == "" {
 			return c.JSON(http.StatusBadRequest,
 				map[string]string{"error": "invalid token request"})
 		}
 
-		resp, err := issueTokenPair(jwt, req.Email, req.Remember)
+		email := strings.ToLower(strings.TrimSpace(req.Email))
+		user, err := db.FindUserByEmail(c.Request().Context(), database, email)
+		if errors.Is(err, db.ErrUserNotFound) {
+			return c.JSON(http.StatusUnauthorized,
+				map[string]string{"error": "email or password is incorrect"})
+		}
+
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError,
+				map[string]string{"error": "could not authenticate account"})
+		}
+
+		if bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)) != nil {
+			return c.JSON(http.StatusUnauthorized,
+				map[string]string{"error": "email or password is incorrect"})
+		}
+
+		resp, err := issueTokenPair(jwt, user.Email, req.Remember)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError,
 				map[string]string{"error": "could not generate token"})

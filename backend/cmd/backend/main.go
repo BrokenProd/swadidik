@@ -7,11 +7,19 @@ import (
 	"os"
 	"time"
 
+	"codeberg.org/iklabib/swadidik/db"
 	"codeberg.org/iklabib/swadidik/entities"
 	"codeberg.org/iklabib/swadidik/server"
 )
 
 func main() {
+	databaseUrl := os.Getenv("DATABASE_URL")
+	database, err := db.Connect(databaseUrl)
+	if err != nil {
+		panic("failed to connect to PostgreSQL: " + err.Error())
+	}
+	defer database.Close()
+
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
 		panic("empty JWT secret")
@@ -43,7 +51,7 @@ func main() {
 		ReadTimeout:       15 * time.Second,
 		WriteTimeout:      30 * time.Second,
 		IdleTimeout:       60 * time.Second,
-		Handler:           server.NewServer(config),
+		Handler:           server.NewServer(config, database),
 	}
 
 	slog.Info("starting at " + server.Addr)
