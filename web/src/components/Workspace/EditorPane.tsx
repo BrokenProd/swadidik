@@ -45,7 +45,11 @@ const EditorPane = ({
       const response = await apiFetch("/invoke/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language, files: sourceFiles }),
+        body: JSON.stringify({
+          language,
+          files: sourceFiles,
+          active_file: file.filePath,
+        }),
       });
 
       if (!response.ok) {
