@@ -3,8 +3,14 @@ import type { JSX } from "react";
 import { isMaterialFile, type WorkspaceFile } from "#/shared/files";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import type { GroupImperativeHandle, Layout } from "react-resizable-panels";
-import { CircleX, PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import { ToastContainer } from "#/components/Toast";
+import {
+  ChevronLeft,
+  ChevronRight,
+  CircleX,
+  PanelLeftClose,
+  PanelLeftOpen,
+} from "lucide-react";
+import { useNavigate } from "react-router";
 import MarkdownPanel from "#/components/MarkdownPanel";
 import LoadingHolder from "./LoadingHolder";
 import { useFileSystemStore } from "./fileSystemStore";
@@ -15,6 +21,8 @@ import { useLazyWorkspaceComponents } from "./useLazyWorkspaceComponents";
 import { useWorkspaceInitialization } from "./useWorkspaceInitialization";
 import { useActiveWorkspaceTab } from "./useActiveWorkspaceTab";
 import type { MobilePane } from "./workspace.types";
+import EditorSettings from "./EditorSettings";
+import { useTerminalStore } from "#/components/Terminal/terminalStore";
 
 interface Props {
   uuid: string;
@@ -36,6 +44,7 @@ const PANEL_IDS = {
 } as const;
 
 const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => {
+  const navigate = useNavigate();
   const [maximizeTerminal, setMaximizeTerminal] = useState(false);
   const [isFileTreeCollapsed, setIsFileTreeCollapsed] = useState(false);
   const [mobilePane, setMobilePane] = useState<MobilePane>("editor");
@@ -59,6 +68,7 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
   );
   const selectedTab = useWorkspaceUiStore((state) => state.selectedTab);
   const updateConfig = useWorkspaceUiStore((state) => state.updateConfig);
+  const clearTerminal = useTerminalStore((state) => state.clear);
 
   const showTree = showFileTree === undefined || showFileTree;
 
@@ -145,6 +155,19 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
     setMaximizeTerminal(true);
   };
 
+  const changeTrack = (offset: number) => {
+    if (offset < 0) {
+      const numTrack = +track
+      if (isNaN(numTrack)) return
+      if ((+track + offset) <= 0) return
+    }
+
+    clearTerminal();
+    const query = new URLSearchParams(window.location.search);
+    query.set("track", String(Number(track) + offset));
+    navigate({ search: `?${query.toString()}` });
+  };
+
   const desktopMainColumn = (
     <Group
       orientation="vertical"
@@ -194,7 +217,30 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
 
   return (
     <div className="flex h-full flex-col bg-base-200/50 p-2">
-      <ToastContainer />
+      <header className="flex h-11 shrink-0 items-center justify-between border border-base-300 bg-base-100 px-2">
+        <nav className="flex items-center gap-1" aria-label="Track navigation">
+          <button
+            className="btn btn-ghost btn-sm"
+            onClick={() => changeTrack(-1)}
+            aria-label="Previous track"
+            title="Previous"
+          >
+            <ChevronLeft className="size-5" />
+            Back
+          </button>
+          <button
+            className="btn btn-ghost btn-sm"
+            onClick={() => changeTrack(1)}
+            aria-label="Next track"
+            title="Next"
+          >
+            Next
+            <ChevronRight />
+          </button>
+        </nav>
+
+        <EditorSettings />
+      </header>
 
       {!isDesktopLayout && (
         <>
