@@ -29,7 +29,7 @@ func RunHandler(c *echo.Context) error {
 
 		output, err := python.Run()
 		if err != nil {
-			return c.String(http.StatusInternalServerError, "run error: "+err.Error())
+			return c.String(http.StatusInternalServerError, output)
 		}
 
 		resp := runners.RunResponse{
@@ -52,7 +52,7 @@ func RunHandler(c *echo.Context) error {
 
 		output, err := java.Run()
 		if err != nil {
-			return c.String(http.StatusInternalServerError, "run error: "+err.Error())
+			return c.String(http.StatusInternalServerError, output)
 		}
 
 		resp := runners.RunResponse{
