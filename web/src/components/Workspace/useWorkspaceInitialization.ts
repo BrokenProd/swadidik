@@ -73,7 +73,7 @@ export const useWorkspaceInitialization = ({
     };
 
     initialize();
-  }, [uuid]);
+  }, [track, uuid]);
 
   return { isInitialized, status };
 };
