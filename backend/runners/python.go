@@ -8,12 +8,17 @@ import (
 )
 
 type Python struct {
-	Workdir string
-	Files   []SourceFile
+	Workdir    string
+	Files      []SourceFile
+	ActiveFile string
 }
 
-func NewPython(files []SourceFile) Runner {
-	return &Python{Files: files}
+func NewPython(files []SourceFile, activeFile ...string) Runner {
+	file := "main.py"
+	if len(activeFile) > 0 && activeFile[0] != "" {
+		file = activeFile[0]
+	}
+	return &Python{Files: files, ActiveFile: file}
 }
 
 func (python *Python) Prep() error {
@@ -59,7 +64,7 @@ func (python *Python) Run() (string, error) {
 		"--cwd",
 		python.Workdir,
 		"--",
-		"/usr/bin/python3", "main.py") // TODO configure which script to run
+		"/usr/bin/python3", python.ActiveFile)
 
 	cmd.Dir = python.Workdir
 	output, err := cmd.CombinedOutput()

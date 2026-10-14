@@ -13,8 +13,9 @@ type SourceFile struct {
 }
 
 type RunDto struct {
-	Language string       `json:"language"`
-	Files    []SourceFile `json:"files"`
+	Language   string       `json:"language"`
+	Files      []SourceFile `json:"files"`
+	ActiveFile string       `json:"active_file"`
 }
 
 type RunResponse struct {

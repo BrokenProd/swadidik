@@ -20,7 +20,7 @@ func RunHandler(c *echo.Context) error {
 
 	switch runDto.Language {
 	case "python":
-		python := runners.NewPython(runDto.Files)
+		python := runners.NewPython(runDto.Files, runDto.ActiveFile)
 		defer python.Dispose()
 
 		if err := python.Prep(); err != nil {
@@ -39,7 +39,7 @@ func RunHandler(c *echo.Context) error {
 		return c.JSON(http.StatusOK, resp)
 
 	case "java":
-		java := runners.NewJava(runDto.Files)
+		java := runners.NewJava(runDto.Files, runDto.ActiveFile)
 		defer java.Dispose()
 
 		if err := java.Prep(); err != nil {

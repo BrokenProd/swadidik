@@ -6,16 +6,21 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 type Java struct {
-	Workdir string
-	Files   []SourceFile
+	Workdir    string
+	Files      []SourceFile
+	ActiveFile string
 }
 
-func NewJava(files []SourceFile) Runner {
-	java := &Java{Files: files}
-	return java
+func NewJava(files []SourceFile, activeFile ...string) Runner {
+	file := "Main.java"
+	if len(activeFile) > 0 && activeFile[0] != "" {
+		file = activeFile[0]
+	}
+	return &Java{Files: files, ActiveFile: file}
 }
 
 func (java *Java) Prep() error {
@@ -59,9 +64,15 @@ func (java *Java) Build() error {
 		return fmt.Errorf("javac failed: %v\n%s", err, output)
 	}
 
+	mainClass := "Main"
+	if java.ActiveFile != "" {
+		base := filepath.Base(java.ActiveFile)
+		mainClass = strings.TrimSuffix(base, filepath.Ext(base))
+	}
+
 	commandArgs := []string{
 		"cfe", "main.jar",
-		"Main", ".",
+		mainClass, ".",
 	}
 
 	cmd = exec.Command("/opt/jdk/bin/jar", commandArgs...)
