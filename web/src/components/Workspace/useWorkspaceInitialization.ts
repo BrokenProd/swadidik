@@ -23,6 +23,13 @@ export const useWorkspaceInitialization = ({
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading",
   );
+  const [prevTrack, setPrevTrack] = useState(track);
+
+  if (prevTrack !== track) {
+    setPrevTrack(track);
+    setStatus("loading");
+    setIsInitialized(false);
+  }
 
   useEffect(() => {
     if (showTabs !== undefined) {
@@ -35,6 +42,8 @@ export const useWorkspaceInitialization = ({
   }, [editable, showTabs, updateConfig]);
 
   useEffect(() => {
+    let cancelled = false;
+
     const initialize = async () => {
       setIsInitialized(false);
       setStatus("loading");
@@ -42,6 +51,8 @@ export const useWorkspaceInitialization = ({
       try {
         const { loadWorkspaceFiles } = await import("./files");
         const ws = await loadWorkspaceFiles(uuid, track);
+        if (cancelled) return;
+
         const preferredFile =
           ws.files.find(
             ({ filePath }) => filePath.split("/").pop() === "Main.java",
@@ -68,11 +79,17 @@ export const useWorkspaceInitialization = ({
         setIsInitialized(true);
         setStatus("success");
       } catch {
-        setStatus("error");
+        if (!cancelled) {
+          setStatus("error");
+        }
       }
     };
 
     initialize();
+
+    return () => {
+      cancelled = true;
+    };
   }, [track, uuid]);
 
   return { isInitialized, status };
