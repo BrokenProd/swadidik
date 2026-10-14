@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -17,42 +18,56 @@ type WorkspaceFile struct {
 func FilesHandler(s3 *storage.S3Client) echo.HandlerFunc {
 	return func(c *echo.Context) error {
 		ctx := c.Request().Context()
-		prefix := c.Param("id")
+
+		id := c.QueryParam("uuid")
+		track := c.QueryParam("track")
+
+		if id == "" || track == "" {
+			return c.JSON(http.StatusBadRequest, map[string]string{
+				"error": "missing required parameters 'uuid' or 'track'",
+			})
+		}
+
+		prefix := fmt.Sprintf("%s/%s", strings.Trim(id, "/"), strings.Trim(track, "/"))
+
 		objects, err := s3.FetchFilesByPrefix(ctx, "swadidik", prefix)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError,
-				map[string]string{"error": "could not fetch files " + err.Error()})
+				map[string]string{"error": "could not fetch files: " + err.Error()})
 		}
 
 		files := []WorkspaceFile{}
 
 		for _, obj := range objects {
-			res, err := s3.GetObject(ctx, "swadidik", obj.Key)
-			if err != nil || res == nil {
-				return c.JSON(http.StatusInternalServerError,
-					map[string]string{"error": "could not fetch files"})
-			}
-
-			content, err := io.ReadAll(res.Body)
-			if err != nil {
-				return c.JSON(http.StatusInternalServerError,
-					map[string]string{"error": "could not fetch files"})
-			}
-
-			key := strings.TrimPrefix(obj.Key, prefix+"/")
-			if key == "" {
+			if strings.HasSuffix(obj.Key, "/") {
 				continue
 			}
 
-			workspaceFile := WorkspaceFile{
-				FilePath: key,
-				Content:  string(content),
+			prefixWithSlash := prefix + "/"
+			if !strings.HasPrefix(obj.Key, prefixWithSlash) {
+				continue
 			}
 
-			files = append(files, workspaceFile)
+			relPath := strings.TrimPrefix(obj.Key, prefixWithSlash)
+			res, err := s3.GetObject(ctx, "swadidik", obj.Key)
+			if err != nil || res == nil {
+				return c.JSON(http.StatusInternalServerError,
+					map[string]string{"error": "could not fetch object content"})
+			}
+
+			content, err := io.ReadAll(res.Body)
+			res.Body.Close()
+			if err != nil {
+				return c.JSON(http.StatusInternalServerError,
+					map[string]string{"error": "could not read object body"})
+			}
+
+			files = append(files, WorkspaceFile{
+				FilePath: relPath,
+				Content:  string(content),
+			})
 		}
 
-		return c.JSON(http.StatusOK,
-			map[string][]WorkspaceFile{"files": files})
+		return c.JSON(http.StatusOK, map[string][]WorkspaceFile{"files": files})
 	}
 }

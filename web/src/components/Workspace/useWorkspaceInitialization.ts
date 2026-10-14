@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import type { WorkspaceConfig } from "./workspaceUiStore";
 import { useFileSystemStore } from "./fileSystemStore";
 import { useWorkspaceUiStore } from "./workspaceUiStore";
+import { isMaterialFile } from "#/shared/files";
 
 interface UseWorkspaceInitializationOptions {
   uuid: string;
+  track: string | number;
   showTabs?: boolean;
   editable?: boolean;
   updateConfig: (config: Partial<WorkspaceConfig>) => void;
@@ -12,6 +14,7 @@ interface UseWorkspaceInitializationOptions {
 
 export const useWorkspaceInitialization = ({
   uuid,
+  track,
   showTabs,
   editable,
   updateConfig,
@@ -38,7 +41,7 @@ export const useWorkspaceInitialization = ({
 
       try {
         const { loadWorkspaceFiles } = await import("./files");
-        const ws = await loadWorkspaceFiles(uuid);
+        const ws = await loadWorkspaceFiles(uuid, track);
         const preferredFile =
           ws.files.find(
             ({ filePath }) => filePath.split("/").pop() === "Main.java",
@@ -46,7 +49,9 @@ export const useWorkspaceInitialization = ({
           ws.files.find(
             ({ filePath }) => filePath.split("/").pop() === "main.py",
           );
-        const tabPaths = ws.files.map((file) => file.filePath);
+        const tabPaths = ws.files
+          .filter((file) => !isMaterialFile(file.filePath))
+          .map((file) => file.filePath);
 
         if (preferredFile) {
           tabPaths.splice(tabPaths.indexOf(preferredFile.filePath), 1);

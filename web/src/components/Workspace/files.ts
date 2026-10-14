@@ -7,8 +7,9 @@ interface WorkspaceFiles {
 
 export const loadWorkspaceFiles = async (
   id: string,
+  track: number | string
 ): Promise<WorkspaceFiles> => {
-  const req = await apiFetch(`/files/${id}`, {
+  const req = await apiFetch(`/files/?uuid=${id}&track=${track}`, {
     method: "GET",
   });
 

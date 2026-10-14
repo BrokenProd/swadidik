@@ -91,6 +91,8 @@ const HomePage = ({ onLogout }: HomePageProps) => {
                   <h2 className="text-xl font-bold text-[#182a51] dark:text-slate-100">{course.title}</h2>
                   <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-400">{course.description}</p>
                 </div>
+
+                <button className="btn btn-sm mt-auto">Ikuti</button>
               </article>
             );
           })}

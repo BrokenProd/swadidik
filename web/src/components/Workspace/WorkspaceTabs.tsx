@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { useFileSystemStore } from "./fileSystemStore";
 import { useWorkspaceUiStore } from "./workspaceUiStore";
-import type { WorkspaceFile } from "#/shared/files";
+import { isMaterialFile, type WorkspaceFile } from "#/shared/files";
 
 const Tab = ({
   file,
@@ -53,7 +53,9 @@ const WorkspaceTabs = () => {
   const files = useFileSystemStore((state) => state.files);
   const tabs = tabPaths
     .map((path) => files[path])
-    .filter((file): file is WorkspaceFile => Boolean(file));
+    .filter(
+      (file): file is WorkspaceFile => Boolean(file && !isMaterialFile(file.filePath)),
+    );
   const selectedTab = useWorkspaceUiStore((state) => state.selectedTab);
   const setSelectedTab = useWorkspaceUiStore((state) => state.setSelectedTab);
   const removeTab = useWorkspaceUiStore((state) => state.removeTab);

@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import type { JSX } from "react";
-import type { WorkspaceFile } from "#/shared/files";
+import { isMaterialFile, type WorkspaceFile } from "#/shared/files";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import type { GroupImperativeHandle, Layout } from "react-resizable-panels";
 import { CircleX, PanelLeftClose, PanelLeftOpen } from "lucide-react";
@@ -18,6 +18,7 @@ import type { MobilePane } from "./workspace.types";
 
 interface Props {
   uuid: string;
+  track: string | number;
   showFileTree?: boolean;
   showTabs?: boolean;
   editable?: boolean;
@@ -34,7 +35,7 @@ const PANEL_IDS = {
   terminal: "workspace-terminal",
 } as const;
 
-const Workspace = ({ uuid, showFileTree, showTabs, editable }: Props) => {
+const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => {
   const [maximizeTerminal, setMaximizeTerminal] = useState(false);
   const [isFileTreeCollapsed, setIsFileTreeCollapsed] = useState(false);
   const [mobilePane, setMobilePane] = useState<MobilePane>("editor");
@@ -50,7 +51,12 @@ const Workspace = ({ uuid, showFileTree, showTabs, editable }: Props) => {
   const files = useFileSystemStore((state) => state.files);
   const tabs = tabPaths
     .map((path) => files[path])
-    .filter((file): file is WorkspaceFile => Boolean(file));
+    .filter(
+      (file): file is WorkspaceFile => Boolean(file && !isMaterialFile(file.filePath)),
+    );
+  const materialFile = Object.values(files).find((file) =>
+    isMaterialFile(file.filePath),
+  );
   const selectedTab = useWorkspaceUiStore((state) => state.selectedTab);
   const updateConfig = useWorkspaceUiStore((state) => state.updateConfig);
 
@@ -58,6 +64,7 @@ const Workspace = ({ uuid, showFileTree, showTabs, editable }: Props) => {
 
   const { isInitialized, status } = useWorkspaceInitialization({
     uuid,
+    track,
     showTabs,
     editable,
     updateConfig,
@@ -100,7 +107,7 @@ const Workspace = ({ uuid, showFileTree, showTabs, editable }: Props) => {
   const mobilePanes = [
     { id: "editor" as const, label: "Editor", visible: true },
     { id: "files" as const, label: "Files", visible: showTree },
-    { id: "material" as const, label: "Material", visible: true },
+    { id: "material" as const, label: "Material", visible: Boolean(materialFile) },
   ].filter((pane) => pane.visible);
 
   const editorPane = (
@@ -217,10 +224,10 @@ const Workspace = ({ uuid, showFileTree, showTabs, editable }: Props) => {
             {mobilePane === "material" && (
               <div className="flex h-full flex-col overflow-hidden bg-base-100">
                 <div className="border-b border-base-300 px-4 py-2 text-sm font-medium">
-                  Preview
+                  Material
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto">
-                  <MarkdownPanel markdown="" />
+                  <MarkdownPanel markdown={materialFile?.content ?? ""} />
                 </div>
               </div>
             )}
@@ -266,38 +273,45 @@ const Workspace = ({ uuid, showFileTree, showTabs, editable }: Props) => {
                 </aside>
               ))}
 
-            <Group
-              orientation="horizontal"
-              className="min-h-0 min-w-0 flex-1"
-              id="workspace-content-group"
-            >
-              <Panel
-                id="workspace-main-panel"
-                minSize="320px"
-                defaultSize="55%"
+            {materialFile ? (
+              <Group
+                orientation="horizontal"
+                className="min-h-0 min-w-0 flex-1"
+                id="workspace-content-group"
               >
-                <div className="size-full min-h-0 min-w-0">
-                  {desktopMainColumn}
-                </div>
-              </Panel>
-
-              <Separator
-                className="w-1 shrink-0 cursor-col-resize bg-base-300 transition-colors hover:bg-base-content/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                id="workspace-material-separator"
-              />
-
-              <Panel
-                id="workspace-material-panel"
-                minSize="280px"
-                defaultSize="45%"
-              >
-                <aside className="flex size-full min-h-0 flex-col bg-base-100">
-                  <div className="min-h-0 flex-1 overflow-y-auto">
-                    <MarkdownPanel markdown="" />
+                <Panel
+                  id="workspace-main-panel"
+                  minSize="320px"
+                  defaultSize="55%"
+                >
+                  <div className="size-full min-h-0 min-w-0">
+                    {desktopMainColumn}
                   </div>
-                </aside>
-              </Panel>
-            </Group>
+                </Panel>
+
+                <Separator
+                  className="w-1 shrink-0 cursor-col-resize bg-base-300 transition-colors hover:bg-base-content/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  id="workspace-material-separator"
+                />
+
+                <Panel
+                  id="workspace-material-panel"
+                  minSize="280px"
+                  defaultSize="45%"
+                >
+                  <aside className="flex size-full min-h-0 flex-col bg-base-100">
+                    <div className="border-b border-base-300 px-4 py-2 text-sm font-medium">
+                      Material
+                    </div>
+                    <div className="min-h-0 flex-1 overflow-y-auto">
+                      <MarkdownPanel markdown={materialFile.content} />
+                    </div>
+                  </aside>
+                </Panel>
+              </Group>
+            ) : (
+              <div className="min-h-0 min-w-0 flex-1">{desktopMainColumn}</div>
+            )}
           </div>
         </div>
       )}

@@ -44,7 +44,7 @@ func NewServer(config entities.Config, database *sql.DB) *echo.Echo {
 
 	filesGroup := e.Group("/files")
 	filesGroup.Use(echojwt.WithConfig(jwtMiddleware))
-	filesGroup.GET("/:id", handlers.FilesHandler(s3client))
+	filesGroup.GET("/", handlers.FilesHandler(s3client))
 
 	return e
 }

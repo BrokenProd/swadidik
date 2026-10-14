@@ -2,6 +2,7 @@ import Workspace from "#/components/Workspace";
 
 function WorkspacePage() {
   const uuid = new URLSearchParams(window.location.search).get("uuid");
+  const track = new URLSearchParams(window.location.search).get("track") ?? "";
 
   if (!uuid) {
     return (
@@ -13,7 +14,7 @@ function WorkspacePage() {
 
   return (
     <div className="w-screen h-screen">
-      <Workspace uuid={uuid} editable={false} />
+      <Workspace uuid={uuid} track={track} editable={false} />
     </div>
   );
 }
