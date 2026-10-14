@@ -3,7 +3,6 @@ import type { WorkspaceFile } from "#/shared/files";
 import { extToContentType } from "#/shared/files";
 import WorkspaceTabs from "./WorkspaceTabs";
 import type { EditorComponentType } from "./workspace.types";
-import EditorSettings from "./EditorSettings";
 import { Play } from "lucide-react";
 import { apiFetch } from "#/shared/api";
 import { useTerminalStore } from "#/components/Terminal/terminalStore";
@@ -94,7 +93,6 @@ const EditorPane = ({
                     )}
                     Run
                   </button>
-                  <EditorSettings />
                 </div>
               </div>
               <div className="size-full overflow-y-auto">
