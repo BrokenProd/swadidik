@@ -34,6 +34,12 @@ const Terminal = () => {
     updateTheme();
   }, [appearance, updateTheme, raw, history.length]);
 
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [history]);
+
   return (
     <div className="flex size-full min-h-0 flex-col">
       <div className="join">
@@ -47,7 +53,7 @@ const Terminal = () => {
 
       <div
         ref={containerRef}
-        className="min-h-0 flex-1 overflow-hidden p-1 outline-none"
+        className="flex min-h-0 flex-1 flex-col overflow-hidden p-1 outline-none"
         tabIndex={0}
       >
         <div

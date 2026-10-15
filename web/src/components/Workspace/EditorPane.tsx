@@ -79,10 +79,6 @@ const EditorPane = ({
               className={`${activeTab === file.filePath ? "flex" : "hidden"} h-full flex-col`}
             >
               <div className="flex items-center justify-between border-b border-base-300 px-4 py-2">
-                <p className="text-sm font-semibold">
-                  {file.filePath.split("/").filter(Boolean).join(" / ")}
-                </p>
-
                 <div className="flex items-center gap-1">
                   <button
                     className="btn btn-neutral btn-sm"
@@ -97,6 +93,10 @@ const EditorPane = ({
                     )}
                     Run
                   </button>
+
+                  <p className="text-sm font-semibold pl-4">
+                    {file.filePath.split("/").filter(Boolean).join(" / ")}
+                  </p>
                 </div>
               </div>
               <div className="size-full overflow-y-auto">
