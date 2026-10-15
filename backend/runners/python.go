@@ -67,9 +67,13 @@ func (python *Python) Run() (string, error) {
 		"/usr/bin/python3", python.ActiveFile)
 
 	cmd.Dir = python.Workdir
-	output, err := cmd.CombinedOutput()
+	out := newLimitedBuffer(MaxOutputSize)
+	cmd.Stdout = out
+	cmd.Stderr = out
 
-	return string(output), err
+	err := cmd.Run()
+
+	return out.String(), err
 }
 
 func (python *Python) Dispose() error {

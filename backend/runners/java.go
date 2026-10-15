@@ -104,12 +104,16 @@ func (java *Java) Run() (string, error) {
 
 	cmd.Dir = java.Workdir
 
-	output, err := cmd.CombinedOutput()
+	out := newLimitedBuffer(MaxOutputSize)
+	cmd.Stdout = out
+	cmd.Stderr = out
+
+	err := cmd.Run()
 	if err != nil {
-		return string(output), err
+		return out.String(), err
 	}
 
-	return string(output), nil
+	return out.String(), nil
 }
 
 func (java *Java) Dispose() error {
