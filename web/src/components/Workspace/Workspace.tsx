@@ -72,7 +72,7 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
 
   const showTree = showFileTree === undefined || showFileTree;
 
-  const { isInitialized, status } = useWorkspaceInitialization({
+  const { isInitialized, status, nextTrackStatus } = useWorkspaceInitialization({
     uuid,
     track,
     showTabs,
@@ -234,6 +234,7 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
             onClick={() => changeTrack(1)}
             aria-label="Next track"
             title="Next"
+            disabled={nextTrackStatus !== "available"}
           >
             Next
             <ChevronRight />
