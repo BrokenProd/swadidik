@@ -14,6 +14,7 @@ interface EditorPaneProps {
   showTabs?: boolean;
   EditorComponent: EditorComponentType | null;
   renderLoadingPane: () => JSX.Element;
+  fileTreeToggle?: { collapsed: boolean; onToggle: () => void };
 }
 
 const EditorPane = ({
@@ -22,6 +23,7 @@ const EditorPane = ({
   showTabs,
   EditorComponent,
   renderLoadingPane,
+  fileTreeToggle
 }: EditorPaneProps) => {
   const isRunning = useWorkspaceUiStore((state) => state.isRunning);
   const setRunning = useWorkspaceUiStore((state) => state.setRunning);
@@ -70,7 +72,7 @@ const EditorPane = ({
 
   return (
     <div className="h-full flex min-h-0 flex-1 flex-col bg-base-100">
-      {(showTabs === undefined || showTabs) && <WorkspaceTabs />}
+      {(showTabs === undefined || showTabs) && <WorkspaceTabs fileTree={fileTreeToggle} />}
       <div className="min-h-0 flex-1 overflow-hidden">
         <div className="size-full">
           {tabs.map((file) => (

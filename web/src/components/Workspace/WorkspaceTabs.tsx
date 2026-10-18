@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, X, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useFileSystemStore } from "./fileSystemStore";
 import { useWorkspaceUiStore } from "./workspaceUiStore";
 import { isMaterialFile, type WorkspaceFile } from "#/shared/files";
@@ -48,7 +48,11 @@ const Tab = ({
   );
 };
 
-const WorkspaceTabs = () => {
+interface WorkspaceTabsProps {
+  fileTree?: { collapsed: boolean; onToggle: () => void };
+}
+
+const WorkspaceTabs = ({ fileTree }: WorkspaceTabsProps) => {
   const tabPaths = useWorkspaceUiStore((state) => state.tabs);
   const files = useFileSystemStore((state) => state.files);
   const tabs = tabPaths
@@ -97,6 +101,24 @@ const WorkspaceTabs = () => {
   return (
     <div className="bg-base-200 border-b border-base-300 flex items-center gap-2 px-2">
       <div className="flex items-center gap-1 shrink-0">
+
+        {fileTree && (
+          <button
+            className="btn btn-ghost btn-sm btn-square"
+            onClick={fileTree.onToggle}
+            aria-label={
+              fileTree.collapsed ? "Expand file manager" : "Collapse file manager"
+            }
+            aria-expanded={!fileTree.collapsed}
+          >
+            {fileTree.collapsed ? (
+              <PanelLeftOpen className="size-4" />
+            ) : (
+              <PanelLeftClose className="size-4" />
+            )}
+          </button>
+        )}
+
         <button
           className="btn btn-ghost btn-sm"
           onClick={() => navigate("left")}

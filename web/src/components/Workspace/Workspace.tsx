@@ -7,8 +7,6 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleX,
-  PanelLeftClose,
-  PanelLeftOpen,
 } from "lucide-react";
 import { useNavigate } from "react-router";
 import MarkdownPanel from "#/components/MarkdownPanel";
@@ -127,6 +125,14 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
       showTabs={showTabs}
       EditorComponent={EditorComponent}
       renderLoadingPane={renderLoadingPane}
+      fileTreeToggle={
+        isDesktopLayout && showTree
+          ? {
+            collapsed: isFileTreeCollapsed,
+            onToggle: () => setIsFileTreeCollapsed((c) => !c),
+          }
+          : undefined
+      }
     />
   );
 
@@ -286,30 +292,11 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
       {isDesktopLayout && (
         <div className="min-h-0 flex-1">
           <div className="flex h-full min-w-0">
-            {showTree &&
-              (isFileTreeCollapsed ? (
-                <div className="flex w-10 shrink-0 justify-center border-r border-base-300 pt-2">
-                  <button
-                    className="btn btn-ghost btn-sm btn-square"
-                    onClick={() => setIsFileTreeCollapsed(false)}
-                    aria-label="Expand file manager"
-                    aria-expanded="false"
-                  >
-                    <PanelLeftOpen className="size-4" />
-                  </button>
-                </div>
-              ) : (
+            {showTree && !isFileTreeCollapsed &&
+              (
                 <aside className="flex w-72 min-w-60 flex-col border-r border-base-300">
                   <div className="flex items-center justify-between border-b border-base-300 px-3 py-2">
                     <span className="text-sm font-medium">Files</span>
-                    <button
-                      className="btn btn-ghost btn-sm btn-square"
-                      onClick={() => setIsFileTreeCollapsed(true)}
-                      aria-label="Collapse file manager"
-                      aria-expanded="true"
-                    >
-                      <PanelLeftClose className="size-4" />
-                    </button>
                   </div>
                   <div className="min-h-0 flex-1 overflow-hidden">
                     {FileTreeComponent ? (
@@ -319,7 +306,7 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
                     )}
                   </div>
                 </aside>
-              ))}
+              )}
 
             {materialFile ? (
               <Group
