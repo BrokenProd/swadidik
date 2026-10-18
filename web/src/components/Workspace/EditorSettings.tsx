@@ -11,6 +11,7 @@ import {
 } from "#/shared/editorSettings";
 
 import loadFont from "#/fonts";
+import { useTheme } from "#/shared/theme";
 
 const updateTheme = async (
   file: WorkspaceFile,
@@ -36,10 +37,11 @@ const EditorSettings = () => {
   const fonts = useMemo(() => ["JetBrains Mono", "Fira Code"], []);
   const isLightMode = settings.editorTheme === "TOKYO_NIGHT_DAY";
 
+  const { setTheme } = useTheme();
+
   useEffect(() => {
-    document.documentElement.dataset.theme = isLightMode ? "light" : "dark";
-    document.documentElement.style.colorScheme = isLightMode ? "light" : "dark";
-  }, [isLightMode]);
+    setTheme(isLightMode ? "light" : "dark");
+  }, [isLightMode, setTheme]);
 
   const handleChange = async (field: string, value: string | number) => {
     const theme = {
