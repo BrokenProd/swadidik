@@ -102,7 +102,7 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
           <span className="text-error">
             <CircleX />
           </span>
-          <p className="text-xl font-semibold">Error Loading Workspace</p>
+          <p className="text-xl font-semibold">Galat Memuat!</p>
         </div>
       </div>
     );

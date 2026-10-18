@@ -35,8 +35,11 @@ function App() {
   if (isAuthenticated === null) {
     return (
       <>
-        <div className="grid h-screen place-items-center bg-[#f7f8fc] text-sm text-slate-500 dark:bg-slate-950 dark:text-slate-400">
-          Memuat sesi...
+        <div className="grid h-screen place-items-center bg-base-200 text-sm text-base-content/70">
+          <div className="flex items-center gap-2">
+            <span className="loading loading-spinner text-primary" />
+            <span>Memuat sesi...</span>
+          </div>
         </div>
         <ThemeToggle />
       </>

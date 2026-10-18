@@ -3,6 +3,7 @@ import type { WorkspaceConfig } from "./workspaceUiStore";
 import { useFileSystemStore } from "./fileSystemStore";
 import { useWorkspaceUiStore } from "./workspaceUiStore";
 import { isMaterialFile } from "#/shared/files";
+import { loadWorkspaceFiles } from "./files";
 
 interface UseWorkspaceInitializationOptions {
   uuid: string;
@@ -40,6 +41,10 @@ export const useWorkspaceInitialization = ({
     setPrevTrack(track);
     setStatus("loading");
     setIsInitialized(false);
+    setNextTrackState({
+      trackKey: String(track),
+      status: "loading",
+    });
   }
 
   useEffect(() => {
@@ -54,14 +59,39 @@ export const useWorkspaceInitialization = ({
 
   useEffect(() => {
     let cancelled = false;
+    const trackKey = String(track);
+    const trackNumber = Number(track);
+    const hasValidTrackNumber =
+      Number.isInteger(trackNumber) && trackNumber >= 1;
 
     const initialize = async () => {
       setIsInitialized(false);
       setStatus("loading");
+      setNextTrackState({
+        trackKey,
+        status: "loading",
+      });
 
       try {
-        const { loadWorkspaceFiles } = await import("./files");
-        const ws = await loadWorkspaceFiles(uuid, track);
+        const preloadPromise = hasValidTrackNumber
+          ? loadWorkspaceFiles(uuid, trackNumber + 1)
+              .then((workspace) => ({
+                status: (workspace.files.length > 0
+                  ? "available"
+                  : "unavailable") as NextTrackStatus,
+              }))
+              .catch(() => ({
+                status: "unavailable" as NextTrackStatus,
+              }))
+          : Promise.resolve({
+              status: "unavailable" as NextTrackStatus,
+            });
+
+        const [ws, nextTrackResult] = await Promise.all([
+          loadWorkspaceFiles(uuid, track),
+          preloadPromise,
+        ]);
+
         if (cancelled) return;
 
         const preferredFile =
@@ -87,47 +117,25 @@ export const useWorkspaceInitialization = ({
             tabPaths,
             preferredFile?.filePath ?? tabPaths[0] ?? "",
           );
+
+        setNextTrackState({
+          trackKey,
+          status: nextTrackResult.status,
+        });
         setIsInitialized(true);
         setStatus("success");
       } catch {
         if (!cancelled) {
           setStatus("error");
-        }
-      }
-    };
-
-    initialize();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [track, uuid]);
-
-  useEffect(() => {
-    const trackNumber = Number(track);
-    if (!Number.isInteger(trackNumber) || trackNumber < 1) {
-      return;
-    }
-
-    let cancelled = false;
-    const trackKey = String(track);
-
-    const preloadNextTrack = async () => {
-      try {
-        const { loadWorkspaceFiles } = await import("./files");
-        const workspace = await loadWorkspaceFiles(uuid, trackNumber + 1);
-        if (!cancelled) {
           setNextTrackState({
             trackKey,
-            status: workspace.files.length > 0 ? "available" : "unavailable",
+            status: "unavailable",
           });
         }
-      } catch {
-        if (!cancelled) setNextTrackState({ trackKey, status: "unavailable" });
       }
     };
 
-    preloadNextTrack();
+    void initialize();
 
     return () => {
       cancelled = true;

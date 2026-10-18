@@ -3,7 +3,7 @@ const LoadingHolder = () => {
     <div className="size-full flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
         <span className="loading loading-spinner loading-lg text-primary"></span>
-        <p className="text-xl font-semibold">Loading Workspace...</p>
+        <p className="text-xl font-semibold">Memuat Ruang Kerja...</p>
       </div>
     </div>
   );

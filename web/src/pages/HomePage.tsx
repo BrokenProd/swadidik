@@ -1,22 +1,28 @@
 import { useState } from "react";
+import { Link, useNavigate } from "react-router";
 import { CheckCircle2 } from "lucide-react";
 
 type Course = {
   title: string;
   description: string;
   level: string;
+  uuid: string;
 };
 
 const courses: Course[] = [
   {
     title: "Dasar-Dasar Python",
-    description: "Kenali sintaks, variabel, percabangan, dan perulangan melalui latihan singkat.",
+    description:
+      "Kenali sintaks, variabel, percabangan, dan perulangan melalui latihan singkat.",
     level: "Pemula",
+    uuid: "0afe55a4-d2d4-4223-bd84-f26b87a9440c",
   },
   {
     title: "Pemrograman Java",
-    description: "Bangun pemahaman tentang tipe data, class, dan object pada Java.",
+    description:
+      "Bangun pemahaman tentang tipe data, class, dan object pada Java.",
     level: "Pemula",
+    uuid: "0afe55a4-d2d4-4223-bd84-f26b87a9440c",
   },
 ];
 
@@ -27,6 +33,7 @@ type HomePageProps = {
 const HomePage = ({ onLogout }: HomePageProps) => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
+  const navigate = useNavigate()
 
   const handleLogout = async () => {
     setLogoutError("");
@@ -36,69 +43,97 @@ const HomePage = ({ onLogout }: HomePageProps) => {
       await onLogout();
     } catch (error) {
       setLogoutError(
-        error instanceof Error ? error.message : "Tidak dapat keluar dari akun. Coba lagi.",
+        error instanceof Error
+          ? error.message
+          : "Tidak dapat keluar dari akun. Coba lagi.",
       );
       setIsLoggingOut(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-[#f7f8fc] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      <header className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-8">
-          <span className="text-lg font-bold text-[#182a51] dark:text-slate-100">Swadidik</span>
-          <div className="flex items-center gap-4">
-            <button
-              type="button"
-              onClick={() => void handleLogout()}
-              disabled={isLoggingOut}
-              className="rounded-lg px-3 py-2 text-sm font-semibold text-[#182a51] transition hover:bg-slate-100 disabled:cursor-wait disabled:opacity-60 dark:text-slate-100 dark:hover:bg-slate-800"
-            >
-              {isLoggingOut ? "Keluar..." : "Keluar"}
-            </button>
-          </div>
+    <div className="min-h-screen bg-base-200 text-base-content flex flex-col">
+      <header className="navbar bg-base-100 shadow-sm border-b border-base-300 px-4 sm:px-8">
+        <div className="flex-1">
+          <Link to="/" className="text-xl font-bold text-primary tracking-tight">
+            Swadidik
+          </Link>
+        </div>
+        <div className="flex-none gap-2">
+          <button
+            type="button"
+            onClick={() => void handleLogout()}
+            disabled={isLoggingOut}
+            className="btn btn-ghost btn-sm"
+          >
+            {isLoggingOut ? (
+              <>
+                <span className="loading loading-spinner loading-xs" />
+                Keluar...
+              </>
+            ) : (
+              "Keluar"
+            )}
+          </button>
         </div>
       </header>
 
-      {logoutError && (
-        <p className="mx-auto mt-4 max-w-6xl px-5 text-sm text-red-600 sm:px-8" role="alert">
-          {logoutError}
-        </p>
-      )}
+      <main className="container mx-auto max-w-6xl px-4 py-8 sm:py-12 flex-1">
+        {logoutError && (
+          <div role="alert" className="alert alert-error mb-6 shadow-sm">
+            <span>{logoutError}</span>
+          </div>
+        )}
 
-      <section className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-16">
-        <div className="max-w-2xl">
-          <p className="mb-3 text-sm font-semibold tracking-wide text-[#159d88]">
-            BELAJAR SESUAI KECEPATANMU
-          </p>
-          <h1 className="text-3xl font-bold tracking-tight text-[#4e5f85] sm:text-4xl">
-            Pilih kursus untuk mulai belajar
-          </h1>
-        </div>
+        <section className="space-y-8">
+          <div>
+            <span className="badge badge-primary badge-soft text-xs font-semibold uppercase tracking-wider mb-2">
+              Belajar Sesuai Kecepatanmu
+            </span>
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
+              Pilih kursus untuk mulai belajar
+            </h1>
+            <p className="text-base-content/70 mt-2 max-w-2xl text-sm sm:text-base">
+              Pilih jalur pembelajaran mandiri yang dirancang untuk membantu Anda
+              menguasai konsep pemrograman langkah demi langkah.
+            </p>
+          </div>
 
-        <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {courses.map((course) => {
-            return (
-              <article
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {courses.map((course) => (
+              <div
                 key={course.title}
-                className="flex min-h-72 flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                className="card bg-base-100 shadow-md hover:shadow-xl transition-all duration-200 border border-base-300 flex flex-col"
               >
-                <div>
-                  <div className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400">
-                    <CheckCircle2 size={16} className="text-[#18a991]" aria-hidden="true" />
-                    {course.level}
+                <div className="card-body flex flex-col justify-between">
+                  <div className="space-y-3">
+                    <div className="badge badge-success badge-soft badge-sm gap-1 font-medium">
+                      <CheckCircle2 size={13} aria-hidden="true" />
+                      {course.level}
+                    </div>
+                    <h2 className="card-title text-xl font-bold">{course.title}</h2>
+                    <p className="text-sm text-base-content/70 leading-relaxed">
+                      {course.description}
+                    </p>
                   </div>
-                  <h2 className="text-xl font-bold text-[#182a51] dark:text-slate-100">{course.title}</h2>
-                  <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-400">{course.description}</p>
-                </div>
 
-                <button className="btn btn-sm mt-auto">Ikuti</button>
-              </article>
-            );
-          })}
-        </div>
-      </section>
-    </main>
+                  <div className="card-actions justify-end mt-6">
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => {
+                        navigate(`/workspace?uuid=${course.uuid}&track=1`);
+                      }}
+                    >
+                      Enter
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
+    </div>
   );
 };
 
