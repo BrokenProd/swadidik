@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { JSX } from "react";
 import { isMaterialFile, type WorkspaceFile } from "#/shared/files";
 import { Group, Panel, Separator } from "react-resizable-panels";
@@ -43,6 +43,18 @@ const PANEL_IDS = {
 
 const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => {
   const navigate = useNavigate();
+  const [editorReady, setEditorReady] = useState(false);
+  const [markdownReady, setMarkdownReady] = useState(false);
+  const handleEditorReady = useCallback(() => setEditorReady(true), []);
+  const handleMarkdownReady = useCallback(() => setMarkdownReady(true), []);
+
+  const [prevTrack, setPrevTrack] = useState(track);
+  if (prevTrack !== track) {
+    setPrevTrack(track);
+    setEditorReady(false);
+    setMarkdownReady(false);
+  }
+
   const [maximizeTerminal, setMaximizeTerminal] = useState(false);
   const [isFileTreeCollapsed, setIsFileTreeCollapsed] = useState(false);
   const [mobilePane, setMobilePane] = useState<MobilePane>("editor");
@@ -118,6 +130,13 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
     { id: "material" as const, label: "Material", visible: Boolean(materialFile) },
   ].filter((pane) => pane.visible);
 
+  const editorVisible =
+    tabs.length > 0 && (isDesktopLayout || mobilePane === "editor");
+  const materialVisible =
+    Boolean(materialFile) && (isDesktopLayout || mobilePane === "material");
+  const allReady =
+    (!editorVisible || editorReady) && (!materialVisible || markdownReady);
+
   const editorPane = (
     <EditorPane
       tabs={tabs}
@@ -125,6 +144,7 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
       showTabs={showTabs}
       EditorComponent={EditorComponent}
       renderLoadingPane={renderLoadingPane}
+      onEditorReady={handleEditorReady}
       fileTreeToggle={
         isDesktopLayout && showTree
           ? {
@@ -168,6 +188,8 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
       if ((+track + offset) <= 0) return
     }
 
+    setEditorReady(false);
+    setMarkdownReady(false);
     clearTerminal();
     const query = new URLSearchParams(window.location.search);
     query.set("track", String(Number(track) + offset));
@@ -222,7 +244,7 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
   );
 
   return (
-    <div className="flex h-full flex-col bg-base-200/50 p-2">
+    <div className="relative flex h-full flex-col bg-base-200/50 p-2">
       <header className="flex h-11 shrink-0 items-center justify-between border border-base-300 bg-base-100 px-2">
         <nav className="flex items-center gap-1" aria-label="Track navigation">
           <button
@@ -281,7 +303,10 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
                   Material
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto">
-                  <MarkdownPanel markdown={materialFile?.content ?? ""} />
+                  <MarkdownPanel
+                    markdown={materialFile?.content ?? ""}
+                    onReady={handleMarkdownReady}
+                  />
                 </div>
               </div>
             )}
@@ -336,7 +361,10 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
                 >
                   <aside className="flex size-full min-h-0 flex-col bg-base-100">
                     <div className="min-h-0 flex-1 overflow-y-auto">
-                      <MarkdownPanel markdown={materialFile.content} />
+                      <MarkdownPanel
+                        markdown={materialFile.content}
+                        onReady={handleMarkdownReady}
+                      />
                     </div>
                   </aside>
                 </Panel>
@@ -345,6 +373,12 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
               <div className="min-h-0 min-w-0 flex-1">{desktopMainColumn}</div>
             )}
           </div>
+        </div>
+      )}
+
+      {!allReady && (
+        <div className="absolute inset-0 z-20 bg-base-100">
+          <LoadingHolder />
         </div>
       )}
     </div>

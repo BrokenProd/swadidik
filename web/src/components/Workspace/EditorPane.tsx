@@ -15,6 +15,7 @@ interface EditorPaneProps {
   EditorComponent: EditorComponentType | null;
   renderLoadingPane: () => JSX.Element;
   fileTreeToggle?: { collapsed: boolean; onToggle: () => void };
+  onEditorReady?: () => void;
 }
 
 const EditorPane = ({
@@ -23,7 +24,8 @@ const EditorPane = ({
   showTabs,
   EditorComponent,
   renderLoadingPane,
-  fileTreeToggle
+  fileTreeToggle,
+  onEditorReady,
 }: EditorPaneProps) => {
   const isRunning = useWorkspaceUiStore((state) => state.isRunning);
   const setRunning = useWorkspaceUiStore((state) => state.setRunning);
@@ -103,7 +105,12 @@ const EditorPane = ({
               </div>
               <div className="size-full overflow-y-auto">
                 {EditorComponent ? (
-                  <EditorComponent file={file} />
+                  <EditorComponent
+                    file={file}
+                    onReady={
+                      file.filePath === activeTab ? onEditorReady : undefined
+                    }
+                  />
                 ) : (
                   renderLoadingPane()
                 )}

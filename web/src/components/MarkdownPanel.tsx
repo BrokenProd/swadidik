@@ -10,6 +10,7 @@ import { useTheme } from "#/shared/theme";
 
 interface Props {
   markdown: string;
+  onReady?: () => void;
 }
 
 type MarkdownNode = {
@@ -78,7 +79,7 @@ const rehypeGithubAlerts = () => (tree: MarkdownNode) => {
   visit(tree);
 };
 
-const MarkdownPanel = ({ markdown }: Props) => {
+const MarkdownPanel = ({ markdown, onReady }: Props) => {
   const [html, setHtml] = useState("");
   const { theme } = useTheme();
 
@@ -98,7 +99,10 @@ const MarkdownPanel = ({ markdown }: Props) => {
         .use(rehypeStringify)
         .process(markdown);
 
-      if (!cancelled) setHtml(String(result));
+      if (!cancelled) {
+        setHtml(String(result));
+        onReady?.();
+      }
     };
 
     void renderMarkdown();
@@ -106,7 +110,7 @@ const MarkdownPanel = ({ markdown }: Props) => {
     return () => {
       cancelled = true;
     };
-  }, [markdown, theme]);
+  }, [markdown, theme, onReady]);
 
   return (
     <article

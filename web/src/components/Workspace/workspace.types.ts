@@ -3,7 +3,10 @@ import type { WorkspaceFile } from "#/shared/files";
 
 export type MobilePane = "editor" | "files" | "material";
 
-export type EditorComponentType = ComponentType<{ file: WorkspaceFile }>;
+export type EditorComponentType = ComponentType<{
+  file: WorkspaceFile;
+  onReady?: () => void;
+}>;
 export type FileTreeComponentType = ComponentType<Record<string, never>>;
 export type TerminalPanelComponentType = ComponentType<{
   onMaximize?: () => void;

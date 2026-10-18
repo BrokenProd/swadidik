@@ -18,9 +18,10 @@ const initializedViews = new WeakSet<EditorView>();
 interface EditorProps {
   file: WorkspaceFile;
   autoSaveTimer?: number;
+  onReady?: () => void;
 }
 
-const Editor = ({ file }: EditorProps) => {
+const Editor = ({ file, onReady }: EditorProps) => {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const editorViewRef = useRef<EditorView | null>(null);
 
@@ -38,6 +39,9 @@ const Editor = ({ file }: EditorProps) => {
 
     const initializeEditor = async () => {
       try {
+        const view = getEditor(file.filePath).view;
+        editorViewRef.current = view;
+
         const { fontFamily, fontSize, editorTheme } = appearance;
         const initialTheme = await loadTheme(fontFamily, fontSize, editorTheme);
         const baseExtensions = await setupExtensions(
@@ -56,9 +60,6 @@ const Editor = ({ file }: EditorProps) => {
           }),
         ];
 
-        const view = getEditor(file.filePath).view;
-        editorViewRef.current = view;
-
         if (!editorRef.current!.contains(view.dom)) {
           editorRef.current!.appendChild(view.dom);
         }
@@ -76,8 +77,12 @@ const Editor = ({ file }: EditorProps) => {
 
         view.requestMeasure();
 
+        // wait for measure + paint
+        requestAnimationFrame(() => requestAnimationFrame(() => onReady?.()));
+
         setInitializing(true);
       } catch (error) {
+        editorViewRef.current = null;
         console.error("Editor initialization failed:", error);
       }
     };
