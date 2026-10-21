@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { JSX } from "react";
 import { isMaterialFile, type WorkspaceFile } from "#/shared/files";
 import { Group, Panel, Separator } from "react-resizable-panels";
@@ -23,6 +23,7 @@ import { loadWorkspaceFiles } from "./files";
 import type { MobilePane } from "./workspace.types";
 import EditorSettings from "./EditorSettings";
 import { useTerminalStore } from "#/components/Terminal/terminalStore";
+import { apiFetch } from "#/shared/api";
 
 interface Props {
   uuid: string;
@@ -59,6 +60,10 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
 
   const [maximizeTerminal, setMaximizeTerminal] = useState(false);
   const [isLoadingNextTrack, setIsLoadingNextTrack] = useState(false);
+  const [trackBounds, setTrackBounds] = useState<{
+    uuid: string;
+    maxTrack: number | null;
+  }>({ uuid, maxTrack: null });
   const [isFileTreeCollapsed, setIsFileTreeCollapsed] = useState(false);
   const [mobilePane, setMobilePane] = useState<MobilePane>("editor");
   const [terminalLayout, setTerminalLayout] = useState<Layout>({
@@ -68,6 +73,35 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
   const groupRef = useRef<GroupImperativeHandle>(null);
   const layoutBeforeTerminalExpansion = useRef<Layout>(terminalLayout);
   const isDesktopLayout = useDesktopLayout();
+  const maxTrack = trackBounds.uuid === uuid ? trackBounds.maxTrack : null;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const response = await apiFetch(
+          `/tracks/?uuid=${encodeURIComponent(uuid)}`,
+        );
+        if (!response.ok) return;
+
+        const tracks = (await response.json()) as { track: number }[] | null;
+        if (!cancelled && tracks?.length) {
+          setTrackBounds({
+            uuid,
+            maxTrack: Math.max(...tracks.map(({ track }) => track)),
+          });
+        }
+      } catch {
+        // Leave maxTrack null and retain the click-time fallback.
+      }
+    };
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [uuid]);
 
   const tabPaths = useWorkspaceUiStore((state) => state.tabs);
   const files = useFileSystemStore((state) => state.files);
@@ -265,7 +299,9 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
     <div className="relative flex h-full flex-col bg-base-200/50 p-2">
       <header className="flex h-11 shrink-0 items-center justify-between border border-base-300 bg-base-100 px-2">
         <nav className="flex items-center gap-1" aria-label="Track navigation">
-          <button className="btn btn-ghost btn-sm" onClick={() => { navigate("/") }}><MoveLeft />Kembali</button>
+          <button className="btn btn-ghost btn-sm"
+            onClick={() => { navigate(`/tracks?uuid=${encodeURIComponent(uuid)}`) }}>
+            <MoveLeft />Kembali</button>
           <button
             className="btn btn-ghost btn-sm"
             onClick={() => changeTrack(-1)}
@@ -281,7 +317,11 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
             onClick={() => void changeToNextTrack()}
             aria-label="Next track"
             title="Next"
-            disabled={isNaN(+track) || isLoadingNextTrack}
+            disabled={
+              isNaN(+track) ||
+              isLoadingNextTrack ||
+              (maxTrack !== null && +track >= maxTrack)
+            }
           >
             Selanjutnya
             <ChevronRight />

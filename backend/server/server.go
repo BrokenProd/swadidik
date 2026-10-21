@@ -46,5 +46,9 @@ func NewServer(config entities.Config, database *sql.DB) *echo.Echo {
 	filesGroup.Use(echojwt.WithConfig(jwtMiddleware))
 	filesGroup.GET("/", handlers.FilesHandler(s3client))
 
+	tracksGroup := e.Group("/tracks")
+	tracksGroup.Use(echojwt.WithConfig(jwtMiddleware))
+	tracksGroup.GET("/", handlers.TracksHandler(database))
+
 	return e
 }

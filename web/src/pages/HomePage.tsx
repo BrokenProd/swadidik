@@ -126,7 +126,7 @@ const HomePage = ({ onLogout }: HomePageProps) => {
                     <button
                       className="btn btn-primary btn-sm"
                       onClick={() => {
-                        navigate(`/workspace?uuid=${course.uuid}&track=1`);
+                        navigate(`/tracks?uuid=${encodeURIComponent(course.uuid)}`);
                       }}
                     >
                       Ikuti
