@@ -1,8 +1,11 @@
 import { Code2, BookOpen, Clock } from "lucide-react";
+import { Link } from "react-router";
+import MainNavbar from "../components/MainNavbar";
 
 const LandingPage = () => {
   return (
     <div className="min-h-screen bg-base-100">
+      <MainNavbar />
       {/* Hero Section */}
       <section className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto text-center space-y-8">
@@ -19,9 +22,9 @@ const LandingPage = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-            <button className="btn btn-primary btn-lg rounded-full">
+            <Link to="/register" className="btn btn-primary btn-lg rounded-full">
               Mari Mulai
-            </button>
+            </Link>
           </div>
         </div>
       </section>

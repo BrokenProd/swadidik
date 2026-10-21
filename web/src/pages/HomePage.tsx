@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, UserRoundArrowLeft } from "lucide-react";
 
 type Course = {
   title: string;
   description: string;
   level: string;
   uuid: string;
+  available: boolean;
 };
 
 const courses: Course[] = [
@@ -16,13 +17,15 @@ const courses: Course[] = [
       "Kenali sintaks, variabel, percabangan, dan perulangan melalui latihan singkat.",
     level: "Pemula",
     uuid: "0afe55a4-d2d4-4223-bd84-f26b87a9440c",
+    available: true
   },
   {
     title: "Pemrograman Java",
     description:
       "Bangun pemahaman tentang tipe data, class, dan object pada Java.",
     level: "Pemula",
-    uuid: "0afe55a4-d2d4-4223-bd84-f26b87a9440c",
+    uuid: "",
+    available: false
   },
 ];
 
@@ -72,7 +75,9 @@ const HomePage = ({ onLogout }: HomePageProps) => {
                 Keluar...
               </>
             ) : (
-              "Keluar"
+              <>
+                <UserRoundArrowLeft /> Keluar
+              </>
             )}
           </button>
         </div>
@@ -117,14 +122,14 @@ const HomePage = ({ onLogout }: HomePageProps) => {
                     </p>
                   </div>
 
-                  <div className="card-actions justify-end mt-6">
+                  <div className="card-actions justify-start mt-6" style={{ display: course.available ? 'flex' : 'none' }}>
                     <button
                       className="btn btn-primary btn-sm"
                       onClick={() => {
                         navigate(`/workspace?uuid=${course.uuid}&track=1`);
                       }}
                     >
-                      Enter
+                      Ikuti
                     </button>
                   </div>
                 </div>

@@ -73,7 +73,7 @@ const EditorSettings = () => {
     <>
       <button className="btn btn-ghost btn-sm" onClick={() => setOpen(true)}>
         <Settings2 />
-        <span className="inline">Settings</span>
+        <span className="inline">Pengaturan</span>
       </button>
 
       <input
@@ -92,12 +92,12 @@ const EditorSettings = () => {
             <X className="size-4" />
           </button>
 
-          <h3 className="font-bold text-lg mb-4 label">Editor Settings</h3>
+          <h3 className="font-bold text-lg mb-4 label">Pengaturan</h3>
 
           <div className="flex flex-col gap-4">
             <div className="form-control w-full">
               <label className="label">
-                <span className="label-text">Theme</span>
+                <span className="label-text">Tema</span>
               </label>
               <fieldset className="fieldset">
                 <label className="toggle toggle-xl text-base-content">
@@ -121,7 +121,7 @@ const EditorSettings = () => {
 
             <div className="form-control w-full">
               <label className="label">
-                <span className="label-text">Font</span>
+                <span className="label-text">Fonta</span>
               </label>
               <select
                 className="select w-full"
@@ -140,7 +140,7 @@ const EditorSettings = () => {
 
             <div className="form-control w-full">
               <label className="label">
-                <span className="label-text">Font Size</span>
+                <span className="label-text">Ukuran Fonta</span>
               </label>
               <input
                 type="number"

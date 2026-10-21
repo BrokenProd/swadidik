@@ -6,6 +6,8 @@ import LoginPage from "./pages/LoginPage";
 import RegistrationPage from "./pages/RegistrationPage";
 import WorkspacePage from "./pages/WorkspacePage";
 import ThemeToggle from "./components/ThemeToggle";
+import ListTrackPage from "./pages/ListTrackPage";
+import LandingPage from "./pages/LandingPage";
 
 function App() {
   const location = useLocation();
@@ -52,6 +54,7 @@ function App() {
         <Route path="/workspace" element={<WorkspacePage />} />
         <Route path="/login" element={<Navigate to="/" replace />} />
         <Route path="/register" element={<Navigate to="/" replace />} />
+        <Route path="/tracks" element={<ListTrackPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
         <Route path="/" element={<HomePage onLogout={handleLogout} />} />
       </Routes>
@@ -61,12 +64,13 @@ function App() {
 
   return <>
     <Routes>
+      <Route path="/" element={<LandingPage />} />
       <Route
         path="/login"
         element={<LoginPage onAuthenticated={() => setIsAuthenticated(true)} />}
       />
       <Route path="/register" element={<RegistrationPage />} />
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
     <ThemeToggle />
   </>;

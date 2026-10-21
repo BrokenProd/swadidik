@@ -95,7 +95,7 @@ const EditorPane = ({
                     ) : (
                       <Play className="size-4" />
                     )}
-                    Run
+                    Jalankan
                   </button>
 
                   <p className="text-sm font-semibold pl-4">

@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleX,
+  MoveLeft
 } from "lucide-react";
 import { useNavigate } from "react-router";
 import MarkdownPanel from "#/components/MarkdownPanel";
@@ -247,6 +248,7 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
     <div className="relative flex h-full flex-col bg-base-200/50 p-2">
       <header className="flex h-11 shrink-0 items-center justify-between border border-base-300 bg-base-100 px-2">
         <nav className="flex items-center gap-1" aria-label="Track navigation">
+          <button className="btn btn-ghost btn-sm" onClick={() => { navigate("/") }}><MoveLeft />Kembali</button>
           <button
             className="btn btn-ghost btn-sm"
             onClick={() => changeTrack(-1)}
@@ -255,7 +257,7 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
             disabled={isNaN(+track) || +track <= 1}
           >
             <ChevronLeft className="size-5" />
-            Back
+            Sebelumnya
           </button>
           <button
             className="btn btn-ghost btn-sm"
@@ -264,10 +266,9 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
             title="Next"
             disabled={nextTrackStatus !== "available"}
           >
-            Next
+            Selanjutnya
             <ChevronRight />
           </button>
-
           <EditorSettings />
         </nav>
       </header>
@@ -299,9 +300,6 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
             )}
             {mobilePane === "material" && (
               <div className="flex h-full flex-col overflow-hidden bg-base-100">
-                <div className="border-b border-base-300 px-4 py-2 text-sm font-medium">
-                  Material
-                </div>
                 <div className="min-h-0 flex-1 overflow-y-auto">
                   <MarkdownPanel
                     markdown={materialFile?.content ?? ""}
@@ -321,7 +319,7 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
               (
                 <aside className="flex w-72 min-w-60 flex-col border-r border-base-300">
                   <div className="flex items-center justify-between border-b border-base-300 px-3 py-2">
-                    <span className="text-sm font-medium">Files</span>
+                    <span className="text-sm font-medium">Berkas</span>
                   </div>
                   <div className="min-h-0 flex-1 overflow-hidden">
                     {FileTreeComponent ? (
