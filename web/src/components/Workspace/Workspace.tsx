@@ -19,6 +19,7 @@ import { useDesktopLayout } from "./useDesktopLayout";
 import { useLazyWorkspaceComponents } from "./useLazyWorkspaceComponents";
 import { useWorkspaceInitialization } from "./useWorkspaceInitialization";
 import { useActiveWorkspaceTab } from "./useActiveWorkspaceTab";
+import { loadWorkspaceFiles } from "./files";
 import type { MobilePane } from "./workspace.types";
 import EditorSettings from "./EditorSettings";
 import { useTerminalStore } from "#/components/Terminal/terminalStore";
@@ -57,6 +58,7 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
   }
 
   const [maximizeTerminal, setMaximizeTerminal] = useState(false);
+  const [isLoadingNextTrack, setIsLoadingNextTrack] = useState(false);
   const [isFileTreeCollapsed, setIsFileTreeCollapsed] = useState(false);
   const [mobilePane, setMobilePane] = useState<MobilePane>("editor");
   const [terminalLayout, setTerminalLayout] = useState<Layout>({
@@ -83,7 +85,7 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
 
   const showTree = showFileTree === undefined || showFileTree;
 
-  const { isInitialized, status, nextTrackStatus } = useWorkspaceInitialization({
+  const { isInitialized, status } = useWorkspaceInitialization({
     uuid,
     track,
     showTabs,
@@ -197,6 +199,21 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
     navigate({ search: `?${query.toString()}` });
   };
 
+  const changeToNextTrack = async () => {
+    const trackNumber = Number(track);
+    if (!Number.isInteger(trackNumber) || trackNumber < 1) return;
+
+    setIsLoadingNextTrack(true);
+    try {
+      const nextWorkspace = await loadWorkspaceFiles(uuid, trackNumber + 1);
+      if (nextWorkspace.files.length > 0) changeTrack(1);
+    } catch {
+      // Keep the current workspace open if the next track cannot be loaded.
+    } finally {
+      setIsLoadingNextTrack(false);
+    }
+  };
+
   const desktopMainColumn = (
     <Group
       orientation="vertical"
@@ -261,10 +278,10 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
           </button>
           <button
             className="btn btn-ghost btn-sm"
-            onClick={() => changeTrack(1)}
+            onClick={() => void changeToNextTrack()}
             aria-label="Next track"
             title="Next"
-            disabled={nextTrackStatus !== "available"}
+            disabled={isNaN(+track) || isLoadingNextTrack}
           >
             Selanjutnya
             <ChevronRight />

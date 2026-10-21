@@ -13,13 +13,6 @@ interface UseWorkspaceInitializationOptions {
   updateConfig: (config: Partial<WorkspaceConfig>) => void;
 }
 
-type NextTrackStatus = "loading" | "available" | "unavailable";
-
-interface NextTrackState {
-  trackKey: string;
-  status: NextTrackStatus;
-}
-
 export const useWorkspaceInitialization = ({
   uuid,
   track,
@@ -32,19 +25,11 @@ export const useWorkspaceInitialization = ({
     "loading",
   );
   const [prevTrack, setPrevTrack] = useState(track);
-  const [nextTrackState, setNextTrackState] = useState<NextTrackState>({
-    trackKey: String(track),
-    status: "loading",
-  });
 
   if (prevTrack !== track) {
     setPrevTrack(track);
     setStatus("loading");
     setIsInitialized(false);
-    setNextTrackState({
-      trackKey: String(track),
-      status: "loading",
-    });
   }
 
   useEffect(() => {
@@ -59,38 +44,12 @@ export const useWorkspaceInitialization = ({
 
   useEffect(() => {
     let cancelled = false;
-    const trackKey = String(track);
-    const trackNumber = Number(track);
-    const hasValidTrackNumber =
-      Number.isInteger(trackNumber) && trackNumber >= 1;
-
     const initialize = async () => {
       setIsInitialized(false);
       setStatus("loading");
-      setNextTrackState({
-        trackKey,
-        status: "loading",
-      });
 
       try {
-        const preloadPromise = hasValidTrackNumber
-          ? loadWorkspaceFiles(uuid, trackNumber + 1)
-              .then((workspace) => ({
-                status: (workspace.files.length > 0
-                  ? "available"
-                  : "unavailable") as NextTrackStatus,
-              }))
-              .catch(() => ({
-                status: "unavailable" as NextTrackStatus,
-              }))
-          : Promise.resolve({
-              status: "unavailable" as NextTrackStatus,
-            });
-
-        const [ws, nextTrackResult] = await Promise.all([
-          loadWorkspaceFiles(uuid, track),
-          preloadPromise,
-        ]);
+        const ws = await loadWorkspaceFiles(uuid, track);
 
         if (cancelled) return;
 
@@ -118,19 +77,11 @@ export const useWorkspaceInitialization = ({
             preferredFile?.filePath ?? tabPaths[0] ?? "",
           );
 
-        setNextTrackState({
-          trackKey,
-          status: nextTrackResult.status,
-        });
         setIsInitialized(true);
         setStatus("success");
       } catch {
         if (!cancelled) {
           setStatus("error");
-          setNextTrackState({
-            trackKey,
-            status: "unavailable",
-          });
         }
       }
     };
@@ -142,15 +93,8 @@ export const useWorkspaceInitialization = ({
     };
   }, [track, uuid]);
 
-  const hasValidTrackNumber =
-    Number.isInteger(Number(track)) && Number(track) >= 1;
-
   return {
     isInitialized,
     status,
-    nextTrackStatus:
-      hasValidTrackNumber && nextTrackState.trackKey === String(track)
-        ? nextTrackState.status
-        : "unavailable",
   };
 };
