@@ -89,4 +89,4 @@ WORKDIR /app
 RUN rm -r /backend
 COPY profiles/ profiles/
 COPY docker-entrypoint.sh .
-ENTRYPOINT ["docker-entrypoint.sh"]
+ENTRYPOINT ["/bin/bash","docker-entrypoint.sh"]
