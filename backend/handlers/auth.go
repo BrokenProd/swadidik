@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -131,7 +132,7 @@ func setTokenCookies(c *echo.Context, tokens tokenPair) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: tokenCookieSameSite(),
 	}
 	refreshCookie := &http.Cookie{
 		Name:     refreshCookieName,
@@ -139,7 +140,7 @@ func setTokenCookies(c *echo.Context, tokens tokenPair) {
 		Path:     "/auth",
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: tokenCookieSameSite(),
 	}
 
 	if tokens.persistent {
@@ -159,7 +160,7 @@ func clearTokenCookies(c *echo.Context) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: tokenCookieSameSite(),
 		MaxAge:   -1,
 		Expires:  expiresAt,
 	})
@@ -169,10 +170,24 @@ func clearTokenCookies(c *echo.Context) {
 		Path:     "/auth",
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: tokenCookieSameSite(),
 		MaxAge:   -1,
 		Expires:  expiresAt,
 	})
+}
+
+// tokenCookieSameSite defaults to Lax for same-site deployments. Set
+// COOKIE_SAME_SITE=none when the browser app and API are on different sites;
+// Secure must remain enabled for SameSite=None cookies.
+func tokenCookieSameSite() http.SameSite {
+	switch strings.ToLower(strings.TrimSpace(os.Getenv("COOKIE_SAME_SITE"))) {
+	case "none":
+		return http.SameSiteNoneMode
+	case "strict":
+		return http.SameSiteStrictMode
+	default:
+		return http.SameSiteLaxMode
+	}
 }
 
 func setNoStoreHeaders(c *echo.Context) {
