@@ -2,6 +2,8 @@ package server
 
 import (
 	"database/sql"
+	"os"
+	"strings"
 
 	"codeberg.org/iklabib/swadidik/entities"
 	"codeberg.org/iklabib/swadidik/handlers"
@@ -16,8 +18,21 @@ func NewServer(config entities.Config, database *sql.DB) *echo.Echo {
 	e := echo.New()
 	e.Use(echomiddleware.BodyLimit(1 << 20))
 	e.Use(echomiddleware.Recover())
+
+	allowOrigins := []string{}
+	if strings.EqualFold(os.Getenv("ENVIRONMENT"), "development") {
+		allowOrigins = []string{"http://localhost:5173", "http://localhost:4173"}
+	}
+
+	if rawOrigins := os.Getenv("ALLOW_ORIGINS"); rawOrigins != "" {
+		allowOrigins = strings.Split(rawOrigins, ",")
+		for i := range allowOrigins {
+			allowOrigins[i] = strings.TrimSpace(allowOrigins[i])
+		}
+	}
+
 	e.Use(echomiddleware.CORSWithConfig(echomiddleware.CORSConfig{
-		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowOrigins:     allowOrigins,
 		AllowCredentials: true,
 	}))
 
