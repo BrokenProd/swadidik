@@ -76,7 +76,7 @@ COPY --from=go /opt/go /opt/go
 
 ENV TZ=Asia/Jakarta
 RUN apt-get update && apt-get install -y python3
-# RUN apt-get install -y cgroup-tools && rm -rf /var/lib/apt/lists/*
+RUN apt-get install -y cgroup-tools
 RUN rm -rf /var/lib/apt/lists/*
 
 WORKDIR /backend
@@ -88,4 +88,5 @@ RUN go build -o /app/main ./cmd/backend/main.go
 WORKDIR /app
 RUN rm -r /backend
 COPY profiles/ profiles/
-ENTRYPOINT ./main
+COPY docker-entrypoint.sh .
+ENTRYPOINT ["docker-entrypoint.sh"]
