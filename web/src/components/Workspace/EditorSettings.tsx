@@ -71,9 +71,15 @@ const EditorSettings = () => {
 
   return (
     <>
-      <button className="btn btn-ghost btn-sm" onClick={() => setOpen(true)}>
+      <button
+        className="btn btn-ghost btn-sm"
+        type="button"
+        aria-label="Pengaturan"
+        title="Pengaturan"
+        onClick={() => setOpen(true)}
+      >
         <Settings2 />
-        <span className="inline">Pengaturan</span>
+        <span className="hidden sm:inline">Pengaturan</span>
       </button>
 
       <input

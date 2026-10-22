@@ -7,7 +7,8 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleX,
-  MoveLeft
+  MoveLeft,
+  BookOpenText,
 } from "lucide-react";
 import { useNavigate } from "react-router";
 import MarkdownPanel from "#/components/MarkdownPanel";
@@ -32,6 +33,12 @@ interface Props {
   showTabs?: boolean;
   editable?: boolean;
 }
+
+type Track = {
+  uuid: string;
+  track: number;
+  title: string;
+};
 
 const MIN_TERMINAL_HEIGHT = 160;
 const MIN_EDITOR_HEIGHT = 220;
@@ -69,6 +76,8 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
     uuid: string;
     maxTrack: number | null;
   }>({ uuid, maxTrack: null });
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [isTracksMenuOpen, setIsTracksMenuOpen] = useState(false);
   const [isFileTreeCollapsed, setIsFileTreeCollapsed] = useState(false);
   const [mobilePane, setMobilePane] = useState<MobilePane>("editor");
   const [terminalLayout, setTerminalLayout] = useState<Layout>({
@@ -99,6 +108,31 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
         }
       } catch {
         // Leave maxTrack null and retain the click-time fallback.
+      }
+    };
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [uuid]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const response = await apiFetch(
+          `/tracks/?uuid=${encodeURIComponent(uuid)}`,
+        );
+        if (!response.ok) return;
+
+        const data = (await response.json()) as Track[];
+        if (!cancelled) {
+          setTracks([...data].sort((a, b) => a.track - b.track));
+        }
+      } catch {
+        // The previous/next controls remain available if the menu cannot load.
       }
     };
 
@@ -238,6 +272,21 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
     navigate({ search: `?${query.toString()}` });
   };
 
+  const selectTrack = (selectedTrack: number) => {
+    if (selectedTrack === Number(track)) {
+      setIsTracksMenuOpen(false);
+      return;
+    }
+
+    setEditorReady(false);
+    setMarkdownReady(false);
+    clearTerminal();
+    const query = new URLSearchParams(window.location.search);
+    query.set("track", String(selectedTrack));
+    setIsTracksMenuOpen(false);
+    navigate({ search: `?${query.toString()}` });
+  };
+
   const changeToNextTrack = async () => {
     const trackNumber = Number(track);
     if (!Number.isInteger(trackNumber) || trackNumber < 1) return;
@@ -303,11 +352,18 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
 
   return (
     <div className="relative flex h-full flex-col bg-base-200/50 p-2">
-      <header className="flex h-11 shrink-0 items-center justify-between border border-base-300 bg-base-100 px-2">
+      <header className="relative flex h-11 shrink-0 items-center justify-between border border-base-300 bg-base-100 px-2">
         <nav className="flex items-center gap-1" aria-label="Track navigation">
-          <button className="btn btn-ghost btn-sm"
-            onClick={() => { navigate(`/tracks?uuid=${encodeURIComponent(uuid)}`) }}>
-            <MoveLeft />Kembali</button>
+          <button
+            className="btn btn-ghost btn-sm"
+            type="button"
+            aria-label="Kembali ke daftar track"
+            title="Kembali"
+            onClick={() => { navigate(`/tracks?uuid=${encodeURIComponent(uuid)}`) }}
+          >
+            <MoveLeft />
+            <span className="hidden sm:inline">Kembali</span>
+          </button>
           <button
             className="btn btn-ghost btn-sm"
             onClick={() => changeTrack(-1)}
@@ -316,7 +372,7 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
             disabled={isNaN(+track) || +track <= 1}
           >
             <ChevronLeft className="size-5" />
-            Sebelumnya
+            <span className="hidden sm:inline">Sebelumnya</span>
           </button>
           <button
             className="btn btn-ghost btn-sm"
@@ -329,12 +385,87 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
               (maxTrack !== null && +track >= maxTrack)
             }
           >
-            Selanjutnya
+            <span className="hidden sm:inline">Selanjutnya</span>
             <ChevronRight />
+          </button>
+          <button
+            className="btn btn-ghost btn-sm"
+            type="button"
+            aria-label="Daftar track"
+            aria-expanded={isTracksMenuOpen}
+            aria-controls="workspace-tracks-drawer"
+            onClick={() => setIsTracksMenuOpen((open) => !open)}
+          >
+            <BookOpenText className="size-4" />
+            <span className="hidden sm:inline">Daftar Track</span>
           </button>
           <EditorSettings />
         </nav>
       </header>
+
+      <div
+        className={`absolute inset-x-2 bottom-2 top-[52px] z-30 transition-[visibility] duration-300 ${isTracksMenuOpen ? "visible" : "invisible delay-300"
+          }`}
+        aria-hidden={!isTracksMenuOpen}
+      >
+        <button
+          className={`absolute inset-0 cursor-default bg-neutral/20 transition-opacity duration-300 ${isTracksMenuOpen ? "opacity-100" : "opacity-0"
+            }`}
+          type="button"
+          tabIndex={isTracksMenuOpen ? 0 : -1}
+          aria-label="Close tracks drawer"
+          onClick={() => setIsTracksMenuOpen(false)}
+        />
+        <aside
+          id="workspace-tracks-drawer"
+          className={`absolute inset-y-0 left-0 flex w-80 max-w-[85vw] flex-col border border-base-300 bg-base-100 shadow-xl transition-transform duration-300 ${isTracksMenuOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
+          aria-label="Tracks"
+        >
+          <div className="flex items-center justify-between border-b border-base-300 px-4 py-3">
+            <span className="font-semibold">Daftar track</span>
+            <button
+              className="btn btn-ghost btn-sm btn-square"
+              type="button"
+              tabIndex={isTracksMenuOpen ? 0 : -1}
+              aria-label="Close tracks drawer"
+              onClick={() => setIsTracksMenuOpen(false)}
+            >
+              <CircleX className="size-5" />
+            </button>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto p-2">
+            {tracks.length === 0 ? (
+              <p className="px-3 py-2 text-sm text-base-content/60">
+                Tidak ada track.
+              </p>
+            ) : (
+              <div className="flex flex-col gap-1">
+                {tracks.map((item) => {
+                  const isActive = item.track === Number(track);
+
+                  return (
+                    <button
+                      key={item.uuid}
+                      type="button"
+                      tabIndex={isTracksMenuOpen ? 0 : -1}
+                      aria-current={isActive ? "page" : undefined}
+                      className={`flex w-full items-center gap-2 rounded-btn px-3 py-2 text-left text-sm transition-colors ${isActive
+                        ? "bg-primary text-primary-content"
+                        : "hover:bg-base-200"
+                        }`}
+                      onClick={() => selectTrack(item.track)}
+                    >
+                      <span className="font-medium">{item.track}.</span>
+                      <span className="truncate">{item.title}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </aside>
+      </div>
 
       {!isDesktopLayout && (
         <>
