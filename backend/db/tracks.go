@@ -48,3 +48,19 @@ func GetTracks(db *sql.DB, courseId string) ([]Track, error) {
 
 	return tracks, nil
 }
+
+func GetTrackBound(db *sql.DB, courseId string) int {
+	query := `SELECT COALESCE(MAX(track), 0) FROM tracks WHERE course_id = $1`
+	var count int
+	err := db.QueryRow(query, courseId).Scan(&count)
+
+	if err == sql.ErrNoRows {
+		return 0
+	}
+
+	if err != nil {
+		slog.Error("GetTrackBound failed: course_id=%s, err=%v", courseId, err)
+		return 0
+	}
+	return count
+}

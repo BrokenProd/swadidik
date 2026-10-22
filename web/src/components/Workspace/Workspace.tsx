@@ -44,6 +44,11 @@ const PANEL_IDS = {
   terminal: "workspace-terminal",
 } as const;
 
+const waitForLoadingScreen = () =>
+  new Promise<void>((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+  });
+
 const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => {
   const navigate = useNavigate();
   const [editorReady, setEditorReady] = useState(false);
@@ -81,15 +86,15 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
     const load = async () => {
       try {
         const response = await apiFetch(
-          `/tracks/?uuid=${encodeURIComponent(uuid)}`,
+          `/tracks/bound?uuid=${encodeURIComponent(uuid)}`,
         );
         if (!response.ok) return;
 
-        const tracks = (await response.json()) as { track: number }[] | null;
-        if (!cancelled && tracks?.length) {
+        const data = (await response.json()) as { bound: number };
+        if (!cancelled && Number.isFinite(data.bound)) {
           setTrackBounds({
             uuid,
-            maxTrack: Math.max(...tracks.map(({ track }) => track)),
+            maxTrack: data.bound,
           });
         }
       } catch {
@@ -141,7 +146,7 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
       mobilePane,
     });
 
-  if (status === "loading") return <LoadingHolder />;
+  if (status === "loading" || isLoadingNextTrack) return <LoadingHolder />;
   else if (status === "error") {
     return (
       <div className="size-full flex items-center justify-center">
@@ -239,6 +244,7 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
 
     setIsLoadingNextTrack(true);
     try {
+      await waitForLoadingScreen();
       const nextWorkspace = await loadWorkspaceFiles(uuid, trackNumber + 1);
       if (nextWorkspace.files.length > 0) changeTrack(1);
     } catch {
