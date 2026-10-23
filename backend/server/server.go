@@ -11,6 +11,7 @@ import (
 	"codeberg.org/iklabib/swadidik/utils"
 	echojwt "github.com/labstack/echo-jwt/v5"
 	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 	echomiddleware "github.com/labstack/echo/v5/middleware"
 )
 
@@ -18,6 +19,7 @@ func NewServer(config entities.Config, database *sql.DB) *echo.Echo {
 	e := echo.New()
 	e.Use(echomiddleware.BodyLimit(1 << 20))
 	e.Use(echomiddleware.Recover())
+	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(10.0)))
 
 	allowOrigins := []string{}
 	if strings.EqualFold(os.Getenv("ENVIRONMENT"), "development") {
