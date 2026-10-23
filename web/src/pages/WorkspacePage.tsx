@@ -1,10 +1,21 @@
 import Workspace from "#/components/Workspace";
+import { useLocation } from "react-router";
+
+type Track = {
+  uuid: string;
+  order: number;
+  title: string;
+};
 
 function WorkspacePage() {
-  const uuid = new URLSearchParams(window.location.search).get("uuid");
-  const track = new URLSearchParams(window.location.search).get("track") ?? "";
+  const { state } = useLocation();
+  const listTrack = (state as { tracks?: Track[] } | null)?.tracks ?? [];
 
-  if (!uuid) {
+  const searchParams = new URLSearchParams(window.location.search);
+  const courseId = searchParams.get("course_id");
+  const uuid = searchParams.get("uuid") ?? listTrack[0]?.uuid ?? "";
+
+  if (!courseId) {
     return (
       <div className="flex h-screen items-center justify-center">
         A workspace ID is required.
@@ -14,7 +25,7 @@ function WorkspacePage() {
 
   return (
     <div className="w-screen h-screen">
-      <Workspace uuid={uuid} track={track} editable={false} />
+      <Workspace uuid={uuid} courseId={courseId} editable={false} />
     </div>
   );
 }

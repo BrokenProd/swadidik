@@ -1,58 +1,40 @@
-import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { CheckCircle2, UserRoundArrowLeft } from "lucide-react";
+import LogoutButton from "#/components/LogoutButton";
+import { useEffect, useState } from "react";
+import { apiFetch } from "#/shared/api";
+import type { Course } from "#/shared/course";
+import { Clock, User } from "lucide-react";
+import { format, register } from "timeago.js";
+import { id_ID } from "timeago.js/lib/lang";
 
-type Course = {
-  title: string;
-  description: string;
-  level: string;
-  uuid: string;
-  available: boolean;
-};
-
-const courses: Course[] = [
-  {
-    title: "Dasar-Dasar Python",
-    description:
-      "Kenali sintaks, variabel, percabangan, dan perulangan melalui latihan singkat.",
-    level: "Pemula",
-    uuid: "0afe55a4-d2d4-4223-bd84-f26b87a9440c",
-    available: true
-  },
-  {
-    title: "Pemrograman Java",
-    description:
-      "Bangun pemahaman tentang tipe data, class, dan object pada Java.",
-    level: "Pemula",
-    uuid: "",
-    available: false
-  },
-];
+register("id_ID", id_ID);
 
 type HomePageProps = {
   onLogout: () => Promise<void>;
 };
 
 const HomePage = ({ onLogout }: HomePageProps) => {
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [logoutError, setLogoutError] = useState("");
   const navigate = useNavigate()
+  const [courses, setCourses] = useState<Course[]>([])
+  const [courseStatus, setCourseStatus] = useState<"loading" | "success">("loading")
 
-  const handleLogout = async () => {
-    setLogoutError("");
-    setIsLoggingOut(true);
+  useEffect(() => {
+    if (courseStatus === "success") return;
 
-    try {
-      await onLogout();
-    } catch (error) {
-      setLogoutError(
-        error instanceof Error
-          ? error.message
-          : "Tidak dapat keluar dari akun. Coba lagi.",
-      );
-      setIsLoggingOut(false);
+    const load = async () => {
+      const resp = await apiFetch("/courses/")
+      if (resp.ok) {
+        const courses = await resp.json()
+        setCourses(courses as Course[])
+      }
     }
-  };
+
+    load()
+
+    return () => {
+      setCourseStatus("success")
+    }
+  }, [courseStatus, courses])
 
   return (
     <div className="min-h-screen bg-base-200 text-base-content flex flex-col">
@@ -63,33 +45,11 @@ const HomePage = ({ onLogout }: HomePageProps) => {
           </Link>
         </div>
         <div className="flex-none gap-2">
-          <button
-            type="button"
-            onClick={() => void handleLogout()}
-            disabled={isLoggingOut}
-            className="btn btn-ghost btn-sm"
-          >
-            {isLoggingOut ? (
-              <>
-                <span className="loading loading-spinner loading-xs" />
-                Keluar...
-              </>
-            ) : (
-              <>
-                <UserRoundArrowLeft /> Keluar
-              </>
-            )}
-          </button>
+          <LogoutButton onLogout={onLogout} />
         </div>
       </header>
 
       <main className="container mx-auto max-w-6xl px-4 py-8 sm:py-12 flex-1">
-        {logoutError && (
-          <div role="alert" className="alert alert-error mb-6 shadow-sm">
-            <span>{logoutError}</span>
-          </div>
-        )}
-
         <section className="space-y-8">
           <div>
             <span className="badge badge-primary badge-soft text-xs font-semibold uppercase tracking-wider mb-2">
@@ -107,29 +67,33 @@ const HomePage = ({ onLogout }: HomePageProps) => {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {courses.map((course) => (
               <div
-                key={course.title}
+                key={course.courseId}
                 className="card bg-base-100 shadow-md hover:shadow-xl transition-all duration-200 border border-base-300 flex flex-col"
               >
                 <div className="card-body flex flex-col justify-between">
                   <div className="space-y-3">
-                    <div className="badge badge-success badge-soft badge-sm gap-1 font-medium">
-                      <CheckCircle2 size={13} aria-hidden="true" />
-                      {course.level}
-                    </div>
                     <h2 className="card-title text-xl font-bold">{course.title}</h2>
+                    <span className="flex text-sm"><User className="mr-2" /> {course.authorName}</span>
+
+                    {course.expireAt !== null && (
+                      <span className="flex text-sm">
+                        <Clock className="mr-2" />
+                        {format(course.expireAt, "id_ID")}
+                      </span>
+                    )}
                     <p className="text-sm text-base-content/70 leading-relaxed">
                       {course.description}
                     </p>
                   </div>
 
-                  <div className="card-actions justify-start mt-6" style={{ display: course.available ? 'flex' : 'none' }}>
+                  <div className="card-actions justify-start mt-6">
                     <button
                       className="btn btn-primary btn-sm"
                       onClick={() => {
-                        navigate(`/tracks?uuid=${encodeURIComponent(course.uuid)}`);
+                        navigate(`/tracks?course_id=${encodeURIComponent(course.courseId)}`, { state: course });
                       }}
                     >
-                      Ikuti
+                      Lihat
                     </button>
                   </div>
                 </div>

@@ -19,7 +19,7 @@ export const loadWorkspaceFiles = async (
   if (cachedWorkspace) return cachedWorkspace;
 
   const workspacePromise = (async (): Promise<WorkspaceFiles> => {
-    const req = await apiFetch(`/files/?uuid=${id}&track=${track}`, {
+    const req = await apiFetch(`/files/?course_id=${id}&uuid=${track}`, {
       method: "GET",
     });
 

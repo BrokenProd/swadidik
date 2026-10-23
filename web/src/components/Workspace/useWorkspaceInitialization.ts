@@ -6,16 +6,16 @@ import { isMaterialFile } from "#/shared/files";
 import { loadWorkspaceFiles } from "./files";
 
 interface UseWorkspaceInitializationOptions {
+  courseId: string;
   uuid: string;
-  track: string | number;
   showTabs?: boolean;
   editable?: boolean;
   updateConfig: (config: Partial<WorkspaceConfig>) => void;
 }
 
 export const useWorkspaceInitialization = ({
+  courseId,
   uuid,
-  track,
   showTabs,
   editable,
   updateConfig,
@@ -24,10 +24,10 @@ export const useWorkspaceInitialization = ({
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading",
   );
-  const [prevTrack, setPrevTrack] = useState(track);
+  const [prevTrack, setPrevTrack] = useState(uuid);
 
-  if (prevTrack !== track) {
-    setPrevTrack(track);
+  if (prevTrack !== uuid) {
+    setPrevTrack(uuid);
     setStatus("loading");
     setIsInitialized(false);
   }
@@ -49,7 +49,7 @@ export const useWorkspaceInitialization = ({
       setStatus("loading");
 
       try {
-        const ws = await loadWorkspaceFiles(uuid, track);
+        const ws = await loadWorkspaceFiles(courseId, uuid);
 
         if (cancelled) return;
 
@@ -91,7 +91,7 @@ export const useWorkspaceInitialization = ({
     return () => {
       cancelled = true;
     };
-  }, [track, uuid]);
+  }, [courseId, uuid]);
 
   return {
     isInitialized,

@@ -54,7 +54,7 @@ function App() {
         <Route path="/workspace" element={<WorkspacePage />} />
         <Route path="/login" element={<Navigate to="/" replace />} />
         <Route path="/register" element={<Navigate to="/" replace />} />
-        <Route path="/tracks" element={<ListTrackPage />} />
+        <Route path="/tracks" element={<ListTrackPage onLogout={handleLogout} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
         <Route path="/" element={<HomePage onLogout={handleLogout} />} />
       </Routes>

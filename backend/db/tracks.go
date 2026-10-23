@@ -7,10 +7,9 @@ import (
 )
 
 type Track struct {
-	Uuid     string `json:"uuid"`
-	Track    int    `json:"track"`
-	Title    string `json:"title"`
-	CourseId string `json:"course_id"`
+	Uuid  string `json:"uuid"`
+	Order int    `json:"order"`
+	Title string `json:"title"`
 }
 
 var ErrTrackNotFound = errors.New("track not found")
@@ -22,9 +21,11 @@ func InsertTrack(db *sql.DB, track int, title string, course_id string) error {
 }
 
 func GetTracks(db *sql.DB, courseId string) ([]Track, error) {
-	sql := `SELECT uuid, track, title
-			FROM tracks 
-			WHERE course_id = $1`
+	sql := `
+	SELECT uuid, "order", title 
+	FROM tracks 
+	WHERE course_id = $1 
+	ORDER BY "order"`
 
 	var tracks []Track
 
@@ -41,26 +42,10 @@ func GetTracks(db *sql.DB, courseId string) ([]Track, error) {
 	}
 
 	for rows.Next() {
-		var each = Track{CourseId: courseId}
-		rows.Scan(&each.Uuid, &each.Track, &each.Title)
+		var each = Track{}
+		rows.Scan(&each.Uuid, &each.Order, &each.Title)
 		tracks = append(tracks, each)
 	}
 
 	return tracks, nil
-}
-
-func GetTrackBound(db *sql.DB, courseId string) int {
-	query := `SELECT COALESCE(MAX(track), 0) FROM tracks WHERE course_id = $1`
-	var count int
-	err := db.QueryRow(query, courseId).Scan(&count)
-
-	if err == sql.ErrNoRows {
-		return 0
-	}
-
-	if err != nil {
-		slog.Error("GetTrackBound failed: course_id=%s, err=%v", courseId, err)
-		return 0
-	}
-	return count
 }

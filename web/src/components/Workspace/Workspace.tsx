@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { JSX } from "react";
 import { isMaterialFile, type WorkspaceFile } from "#/shared/files";
 import { Group, Panel, Separator } from "react-resizable-panels";
@@ -10,7 +10,7 @@ import {
   MoveLeft,
   BookOpenText,
 } from "lucide-react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import MarkdownPanel from "#/components/MarkdownPanel";
 import LoadingHolder from "./LoadingHolder";
 import { useFileSystemStore } from "./fileSystemStore";
@@ -24,11 +24,10 @@ import { loadWorkspaceFiles } from "./files";
 import type { MobilePane } from "./workspace.types";
 import EditorSettings from "./EditorSettings";
 import { useTerminalStore } from "#/components/Terminal/terminalStore";
-import { apiFetch } from "#/shared/api";
 
 interface Props {
+  courseId: string;
   uuid: string;
-  track: string | number;
   showFileTree?: boolean;
   showTabs?: boolean;
   editable?: boolean;
@@ -36,9 +35,13 @@ interface Props {
 
 type Track = {
   uuid: string;
-  track: number;
+  order: number;
   title: string;
 };
+
+type WorkspaceLocationState = {
+  tracks?: Track[];
+} | null;
 
 const MIN_TERMINAL_HEIGHT = 160;
 const MIN_EDITOR_HEIGHT = 220;
@@ -56,27 +59,22 @@ const waitForLoadingScreen = () =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
   });
 
-const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => {
+const Workspace = ({ courseId, uuid, showFileTree, showTabs, editable }: Props) => {
   const navigate = useNavigate();
   const [editorReady, setEditorReady] = useState(false);
   const [markdownReady, setMarkdownReady] = useState(false);
   const handleEditorReady = useCallback(() => setEditorReady(true), []);
   const handleMarkdownReady = useCallback(() => setMarkdownReady(true), []);
 
-  const [prevTrack, setPrevTrack] = useState(track);
-  if (prevTrack !== track) {
-    setPrevTrack(track);
+  const [prevTrack, setPrevTrack] = useState(uuid);
+  if (prevTrack !== uuid) {
+    setPrevTrack(uuid);
     setEditorReady(false);
     setMarkdownReady(false);
   }
 
   const [maximizeTerminal, setMaximizeTerminal] = useState(false);
   const [isLoadingNextTrack, setIsLoadingNextTrack] = useState(false);
-  const [trackBounds, setTrackBounds] = useState<{
-    uuid: string;
-    maxTrack: number | null;
-  }>({ uuid, maxTrack: null });
-  const [tracks, setTracks] = useState<Track[]>([]);
   const [isTracksMenuOpen, setIsTracksMenuOpen] = useState(false);
   const [isFileTreeCollapsed, setIsFileTreeCollapsed] = useState(false);
   const [mobilePane, setMobilePane] = useState<MobilePane>("editor");
@@ -87,60 +85,8 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
   const groupRef = useRef<GroupImperativeHandle>(null);
   const layoutBeforeTerminalExpansion = useRef<Layout>(terminalLayout);
   const isDesktopLayout = useDesktopLayout();
-  const maxTrack = trackBounds.uuid === uuid ? trackBounds.maxTrack : null;
 
-  useEffect(() => {
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const response = await apiFetch(
-          `/tracks/bound?uuid=${encodeURIComponent(uuid)}`,
-        );
-        if (!response.ok) return;
-
-        const data = (await response.json()) as { bound: number };
-        if (!cancelled && Number.isFinite(data.bound)) {
-          setTrackBounds({
-            uuid,
-            maxTrack: data.bound,
-          });
-        }
-      } catch {
-        // Leave maxTrack null and retain the click-time fallback.
-      }
-    };
-
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [uuid]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const response = await apiFetch(
-          `/tracks/?uuid=${encodeURIComponent(uuid)}`,
-        );
-        if (!response.ok) return;
-
-        const data = (await response.json()) as Track[];
-        if (!cancelled) {
-          setTracks([...data].sort((a, b) => a.track - b.track));
-        }
-      } catch {
-        // The previous/next controls remain available if the menu cannot load.
-      }
-    };
-
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [uuid]);
+  const tracks = (useLocation().state as WorkspaceLocationState)?.tracks ?? [];
 
   const tabPaths = useWorkspaceUiStore((state) => state.tabs);
   const files = useFileSystemStore((state) => state.files);
@@ -159,8 +105,8 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
   const showTree = showFileTree === undefined || showFileTree;
 
   const { isInitialized, status } = useWorkspaceInitialization({
+    courseId,
     uuid,
-    track,
     showTabs,
     editable,
     updateConfig,
@@ -257,51 +203,46 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
     setMaximizeTerminal(true);
   };
 
-  const changeTrack = (offset: number) => {
-    if (offset < 0) {
-      const numTrack = +track
-      if (isNaN(numTrack)) return
-      if ((+track + offset) <= 0) return
-    }
-
+  const changeTrack = (nextTrackUuid: string) => {
     setEditorReady(false);
     setMarkdownReady(false);
     clearTerminal();
-    const query = new URLSearchParams(window.location.search);
-    query.set("track", String(Number(track) + offset));
-    navigate({ search: `?${query.toString()}` });
+    navigate(
+      `/workspace?course_id=${encodeURIComponent(courseId)}&uuid=${encodeURIComponent(nextTrackUuid)}`,
+      { state: { tracks } },
+    );
   };
 
-  const selectTrack = (selectedTrack: number) => {
-    if (selectedTrack === Number(track)) {
+  const selectTrack = (selectedTrackUuid: string) => {
+    if (selectedTrackUuid === uuid) {
       setIsTracksMenuOpen(false);
       return;
     }
 
-    setEditorReady(false);
-    setMarkdownReady(false);
-    clearTerminal();
-    const query = new URLSearchParams(window.location.search);
-    query.set("track", String(selectedTrack));
     setIsTracksMenuOpen(false);
-    navigate({ search: `?${query.toString()}` });
+    changeTrack(selectedTrackUuid);
   };
 
   const changeToNextTrack = async () => {
-    const trackNumber = Number(track);
-    if (!Number.isInteger(trackNumber) || trackNumber < 1) return;
+    const currentTrackIndex = tracks.findIndex((item) => item.uuid === uuid);
+    const nextTrack = tracks[currentTrackIndex + 1];
+    if (!nextTrack) return;
 
     setIsLoadingNextTrack(true);
     try {
       await waitForLoadingScreen();
-      const nextWorkspace = await loadWorkspaceFiles(uuid, trackNumber + 1);
-      if (nextWorkspace.files.length > 0) changeTrack(1);
+      const nextWorkspace = await loadWorkspaceFiles(courseId, nextTrack.uuid);
+      if (nextWorkspace.files.length > 0) changeTrack(nextTrack.uuid);
     } catch {
       // Keep the current workspace open if the next track cannot be loaded.
     } finally {
       setIsLoadingNextTrack(false);
     }
   };
+
+  const currentTrackIndex = tracks.findIndex((item) => item.uuid === uuid);
+  const previousTrack = tracks[currentTrackIndex - 1];
+  const nextTrack = tracks[currentTrackIndex + 1];
 
   const desktopMainColumn = (
     <Group
@@ -357,19 +298,21 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
           <button
             className="btn btn-ghost btn-sm"
             type="button"
-            aria-label="Kembali ke daftar track"
+            aria-label="Kembali ke daftar materi"
             title="Kembali"
-            onClick={() => { navigate(`/tracks?uuid=${encodeURIComponent(uuid)}`) }}
+            onClick={() => {
+              navigate(`/tracks?course_id=${encodeURIComponent(courseId)}`);
+            }}
           >
             <MoveLeft />
             <span className="hidden sm:inline">Kembali</span>
           </button>
           <button
             className="btn btn-ghost btn-sm"
-            onClick={() => changeTrack(-1)}
+            onClick={() => previousTrack && changeTrack(previousTrack.uuid)}
             aria-label="Previous track"
             title="Previous"
-            disabled={isNaN(+track) || +track <= 1}
+            disabled={!previousTrack}
           >
             <ChevronLeft className="size-5" />
             <span className="hidden sm:inline">Sebelumnya</span>
@@ -380,9 +323,8 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
             aria-label="Next track"
             title="Next"
             disabled={
-              isNaN(+track) ||
               isLoadingNextTrack ||
-              (maxTrack !== null && +track >= maxTrack)
+              !nextTrack
             }
           >
             <span className="hidden sm:inline">Selanjutnya</span>
@@ -391,13 +333,13 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
           <button
             className="btn btn-ghost btn-sm"
             type="button"
-            aria-label="Daftar track"
+            aria-label="Daftar materi"
             aria-expanded={isTracksMenuOpen}
             aria-controls="workspace-tracks-drawer"
             onClick={() => setIsTracksMenuOpen((open) => !open)}
           >
             <BookOpenText className="size-4" />
-            <span className="hidden sm:inline">Daftar Track</span>
+            <span className="hidden sm:inline">Daftar Materi</span>
           </button>
           <EditorSettings />
         </nav>
@@ -423,7 +365,7 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
           aria-label="Tracks"
         >
           <div className="flex items-center justify-between border-b border-base-300 px-4 py-3">
-            <span className="font-semibold">Daftar track</span>
+            <span className="font-semibold">Daftar Materi</span>
             <button
               className="btn btn-ghost btn-sm btn-square"
               type="button"
@@ -437,12 +379,12 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
           <div className="min-h-0 flex-1 overflow-y-auto p-2">
             {tracks.length === 0 ? (
               <p className="px-3 py-2 text-sm text-base-content/60">
-                Tidak ada track.
+                Tidak ada materi.
               </p>
             ) : (
               <div className="flex flex-col gap-1">
                 {tracks.map((item) => {
-                  const isActive = item.track === Number(track);
+                  const isActive = item.uuid === uuid;
 
                   return (
                     <button
@@ -454,9 +396,9 @@ const Workspace = ({ uuid, track, showFileTree, showTabs, editable }: Props) => 
                         ? "bg-primary text-primary-content"
                         : "hover:bg-base-200"
                         }`}
-                      onClick={() => selectTrack(item.track)}
+                      onClick={() => selectTrack(item.uuid)}
                     >
-                      <span className="font-medium">{item.track}.</span>
+                      <span className="font-medium">{item.order}.</span>
                       <span className="truncate">{item.title}</span>
                     </button>
                   );

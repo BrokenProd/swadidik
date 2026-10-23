@@ -19,16 +19,16 @@ func FilesHandler(s3 *storage.S3Client) echo.HandlerFunc {
 	return func(c *echo.Context) error {
 		ctx := c.Request().Context()
 
-		id := c.QueryParam("uuid")
-		track := c.QueryParam("track")
+		courseId := c.QueryParam("course_id")
+		uuid := c.QueryParam("uuid") // uuid for track
 
-		if id == "" || track == "" {
+		if courseId == "" || uuid == "" {
 			return c.JSON(http.StatusBadRequest, map[string]string{
-				"error": "missing required parameters 'uuid' or 'track'",
+				"error": "missing required parameters 'uuid' or 'course id'",
 			})
 		}
 
-		prefix := fmt.Sprintf("%s/%s", strings.Trim(id, "/"), strings.Trim(track, "/"))
+		prefix := fmt.Sprintf("materials/%s/%s", strings.Trim(courseId, "/"), strings.Trim(uuid, "/"))
 
 		objects, err := s3.FetchFilesByPrefix(ctx, "swadidik", prefix)
 		if err != nil {

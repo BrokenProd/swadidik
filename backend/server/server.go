@@ -64,7 +64,11 @@ func NewServer(config entities.Config, database *sql.DB) *echo.Echo {
 	tracksGroup := e.Group("/tracks")
 	tracksGroup.Use(echojwt.WithConfig(jwtMiddleware))
 	tracksGroup.GET("/", handlers.TracksHandler(database))
-	tracksGroup.GET("/bound", handlers.TracksBoundHandler(database))
+
+	coursesGroup := e.Group("/courses")
+	coursesGroup.Use(echojwt.WithConfig(jwtMiddleware))
+	coursesGroup.GET("/", handlers.CoursesHandlers(database))
+	coursesGroup.GET("/:courseId", handlers.FindCourseHandlers(database))
 
 	return e
 }
