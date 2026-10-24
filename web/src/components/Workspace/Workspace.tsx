@@ -24,6 +24,7 @@ import { loadWorkspaceFiles } from "./files";
 import type { MobilePane } from "./workspace.types";
 import EditorSettings from "./EditorSettings";
 import { useTerminalStore } from "#/components/Terminal/terminalStore";
+import { apiFetch } from "#/shared/api";
 
 interface Props {
   courseId: string;
@@ -231,6 +232,14 @@ const Workspace = ({ courseId, uuid, showFileTree, showTabs, editable }: Props) 
     setIsLoadingNextTrack(true);
     try {
       await waitForLoadingScreen();
+
+      const headers = new Headers()
+      headers.set("Content-Type", "application/json")
+      await apiFetch("/courses/progress", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ track_id: uuid, is_done: true }),
+      })
       const nextWorkspace = await loadWorkspaceFiles(courseId, nextTrack.uuid);
       if (nextWorkspace.files.length > 0) changeTrack(nextTrack.uuid);
     } catch {

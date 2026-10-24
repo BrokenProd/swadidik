@@ -11,15 +11,15 @@ const getWorkspaceCacheKey = (id: string, track: number | string) =>
   `${id}:${track}`;
 
 export const loadWorkspaceFiles = async (
-  id: string,
-  track: number | string
+  course_id: string,
+  uuid: string
 ): Promise<WorkspaceFiles> => {
-  const cacheKey = getWorkspaceCacheKey(id, track);
+  const cacheKey = getWorkspaceCacheKey(course_id, uuid);
   const cachedWorkspace = workspaceFilesCache.get(cacheKey);
   if (cachedWorkspace) return cachedWorkspace;
 
   const workspacePromise = (async (): Promise<WorkspaceFiles> => {
-    const req = await apiFetch(`/files/?course_id=${id}&uuid=${track}`, {
+    const req = await apiFetch(`/files/?course_id=${course_id}&uuid=${uuid}`, {
       method: "GET",
     });
 

@@ -51,7 +51,7 @@ func TokenHandler(jwt utils.JWTService, database *sql.DB) echo.HandlerFunc {
 				map[string]string{"error": "email or password is incorrect"})
 		}
 
-		resp, err := issueTokenPair(jwt, user.Email, req.Remember)
+		resp, err := issueTokenPair(jwt, user.ID, user.Email, req.Remember)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError,
 				map[string]string{"error": "could not generate token"})
@@ -77,7 +77,7 @@ func RefreshTokenHandler(jwt utils.JWTService) echo.HandlerFunc {
 				map[string]string{"error": "invalid or expired refresh token"})
 		}
 
-		resp, err := issueTokenPair(jwt, claims.Subject, claims.Persistent)
+		resp, err := issueTokenPair(jwt, claims.ID, claims.Subject, claims.Persistent)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError,
 				map[string]string{"error": "could not generate token"})
@@ -104,13 +104,13 @@ type tokenPair struct {
 	persistent   bool
 }
 
-func issueTokenPair(jwt utils.JWTService, email string, persistent bool) (tokenPair, error) {
-	access, accessExpiresAt, err := jwt.Issue(email, tokenTypeAccess, accessTokenLifetime, persistent)
+func issueTokenPair(jwt utils.JWTService, userId, email string, persistent bool) (tokenPair, error) {
+	access, accessExpiresAt, err := jwt.Issue(userId, email, tokenTypeAccess, accessTokenLifetime, persistent)
 	if err != nil {
 		return tokenPair{}, err
 	}
 
-	refresh, _, err := jwt.Issue(email, tokenTypeRefresh, refreshTokenLifetime, persistent)
+	refresh, _, err := jwt.Issue(userId, email, tokenTypeRefresh, refreshTokenLifetime, persistent)
 
 	if err != nil {
 		return tokenPair{}, err

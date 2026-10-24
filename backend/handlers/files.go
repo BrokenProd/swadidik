@@ -30,7 +30,7 @@ func FilesHandler(s3 *storage.S3Client) echo.HandlerFunc {
 
 		prefix := fmt.Sprintf("materials/%s/%s", strings.Trim(courseId, "/"), strings.Trim(uuid, "/"))
 
-		objects, err := s3.FetchFilesByPrefix(ctx, "swadidik", prefix)
+		objects, err := s3.FetchFilesByPrefix(ctx, "lemari", prefix)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError,
 				map[string]string{"error": "could not fetch files: " + err.Error()})
@@ -49,7 +49,7 @@ func FilesHandler(s3 *storage.S3Client) echo.HandlerFunc {
 			}
 
 			relPath := strings.TrimPrefix(obj.Key, prefixWithSlash)
-			res, err := s3.GetObject(ctx, "swadidik", obj.Key)
+			res, err := s3.GetObject(ctx, "lemari", obj.Key)
 			if err != nil || res == nil {
 				return c.JSON(http.StatusInternalServerError,
 					map[string]string{"error": "could not fetch object content"})

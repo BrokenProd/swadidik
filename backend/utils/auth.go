@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"crypto/rand"
 	"errors"
 	"fmt"
 	"time"
@@ -18,7 +17,7 @@ func NewJWTService(config entities.Config) JWTService {
 	return JWTService{config: config}
 }
 
-func (s JWTService) Issue(subject, tokenType string, lifetime time.Duration, persistent bool) (string, time.Time, error) {
+func (s JWTService) Issue(userId, subject, tokenType string, lifetime time.Duration, persistent bool) (string, time.Time, error) {
 	issuedAt := time.Now()
 	expiresAt := issuedAt.Add(lifetime)
 	claims := entities.Claims{
@@ -27,7 +26,7 @@ func (s JWTService) Issue(subject, tokenType string, lifetime time.Duration, per
 		Subject:    subject,
 		Issuer:     s.config.Issuer,
 		Audience:   jwt.ClaimStrings{s.config.Audience},
-		ID:         rand.Text(),
+		ID:         userId,
 		IssuedAt:   jwt.NewNumericDate(issuedAt),
 		NotBefore:  jwt.NewNumericDate(issuedAt),
 		ExpiresAt:  jwt.NewNumericDate(expiresAt),
