@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { JSX } from "react";
 import { isMaterialFile, type WorkspaceFile } from "#/shared/files";
 import { Group, Panel, Separator } from "react-resizable-panels";
@@ -44,6 +44,11 @@ type WorkspaceLocationState = {
   tracks?: Track[];
 } | null;
 
+type CourseProgress = {
+  track_id: string;
+  is_done: boolean;
+};
+
 const MIN_TERMINAL_HEIGHT = 160;
 const MIN_EDITOR_HEIGHT = 220;
 const EXPANDED_TERMINAL_LAYOUT: Layout = {
@@ -60,7 +65,13 @@ const waitForLoadingScreen = () =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
   });
 
-const Workspace = ({ courseId, uuid, showFileTree, showTabs, editable }: Props) => {
+const Workspace = ({
+  courseId,
+  uuid,
+  showFileTree,
+  showTabs,
+  editable,
+}: Props) => {
   const navigate = useNavigate();
   const [editorReady, setEditorReady] = useState(false);
   const [markdownReady, setMarkdownReady] = useState(false);
@@ -88,13 +99,46 @@ const Workspace = ({ courseId, uuid, showFileTree, showTabs, editable }: Props) 
   const isDesktopLayout = useDesktopLayout();
 
   const tracks = (useLocation().state as WorkspaceLocationState)?.tracks ?? [];
+  const [completedTrackIDs, setCompletedTrackIDs] = useState<Set<string>>(
+    () => new Set(),
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadProgress = async () => {
+      try {
+        const response = await apiFetch("/courses/progress");
+        if (!response.ok) return;
+
+        const progress = (await response.json()) as CourseProgress[];
+        if (cancelled) return;
+
+        setCompletedTrackIDs(
+          new Set(
+            progress
+              .filter((item) => item.is_done)
+              .map((item) => item.track_id),
+          ),
+        );
+      } catch {
+        // The workspace remains usable when progress cannot be loaded.
+      }
+    };
+
+    void loadProgress();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [courseId]);
 
   const tabPaths = useWorkspaceUiStore((state) => state.tabs);
   const files = useFileSystemStore((state) => state.files);
   const tabs = tabPaths
     .map((path) => files[path])
-    .filter(
-      (file): file is WorkspaceFile => Boolean(file && !isMaterialFile(file.filePath)),
+    .filter((file): file is WorkspaceFile =>
+      Boolean(file && !isMaterialFile(file.filePath)),
     );
   const materialFile = Object.values(files).find((file) =>
     isMaterialFile(file.filePath),
@@ -150,7 +194,11 @@ const Workspace = ({ courseId, uuid, showFileTree, showTabs, editable }: Props) 
   const mobilePanes = [
     { id: "editor" as const, label: "Editor", visible: true },
     { id: "files" as const, label: "Files", visible: showTree },
-    { id: "material" as const, label: "Material", visible: Boolean(materialFile) },
+    {
+      id: "material" as const,
+      label: "Material",
+      visible: Boolean(materialFile),
+    },
   ].filter((pane) => pane.visible);
 
   const editorVisible =
@@ -171,9 +219,9 @@ const Workspace = ({ courseId, uuid, showFileTree, showTabs, editable }: Props) 
       fileTreeToggle={
         isDesktopLayout && showTree
           ? {
-            collapsed: isFileTreeCollapsed,
-            onToggle: () => setIsFileTreeCollapsed((c) => !c),
-          }
+              collapsed: isFileTreeCollapsed,
+              onToggle: () => setIsFileTreeCollapsed((c) => !c),
+            }
           : undefined
       }
     />
@@ -233,13 +281,17 @@ const Workspace = ({ courseId, uuid, showFileTree, showTabs, editable }: Props) 
     try {
       await waitForLoadingScreen();
 
-      const headers = new Headers()
-      headers.set("Content-Type", "application/json")
-      await apiFetch("/courses/progress", {
+      const headers = new Headers();
+      headers.set("Content-Type", "application/json");
+      const response = await apiFetch("/courses/progress", {
         method: "POST",
         headers,
         body: JSON.stringify({ track_id: uuid, is_done: true }),
-      })
+      });
+      if (!response.ok) return;
+
+      setCompletedTrackIDs((trackIDs) => new Set(trackIDs).add(uuid));
+
       const nextWorkspace = await loadWorkspaceFiles(courseId, nextTrack.uuid);
       if (nextWorkspace.files.length > 0) changeTrack(nextTrack.uuid);
     } catch {
@@ -331,10 +383,7 @@ const Workspace = ({ courseId, uuid, showFileTree, showTabs, editable }: Props) 
             onClick={() => void changeToNextTrack()}
             aria-label="Next track"
             title="Next"
-            disabled={
-              isLoadingNextTrack ||
-              !nextTrack
-            }
+            disabled={isLoadingNextTrack || !nextTrack}
           >
             <span className="hidden sm:inline">Selanjutnya</span>
             <ChevronRight />
@@ -355,13 +404,15 @@ const Workspace = ({ courseId, uuid, showFileTree, showTabs, editable }: Props) 
       </header>
 
       <div
-        className={`absolute inset-x-2 bottom-2 top-[52px] z-30 transition-[visibility] duration-300 ${isTracksMenuOpen ? "visible" : "invisible delay-300"
-          }`}
+        className={`absolute inset-x-2 bottom-2 top-[52px] z-30 transition-[visibility] duration-300 ${
+          isTracksMenuOpen ? "visible" : "invisible delay-300"
+        }`}
         aria-hidden={!isTracksMenuOpen}
       >
         <button
-          className={`absolute inset-0 cursor-default bg-neutral/20 transition-opacity duration-300 ${isTracksMenuOpen ? "opacity-100" : "opacity-0"
-            }`}
+          className={`absolute inset-0 cursor-default bg-neutral/20 transition-opacity duration-300 ${
+            isTracksMenuOpen ? "opacity-100" : "opacity-0"
+          }`}
           type="button"
           tabIndex={isTracksMenuOpen ? 0 : -1}
           aria-label="Close tracks drawer"
@@ -369,8 +420,9 @@ const Workspace = ({ courseId, uuid, showFileTree, showTabs, editable }: Props) 
         />
         <aside
           id="workspace-tracks-drawer"
-          className={`absolute inset-y-0 left-0 flex w-80 max-w-[85vw] flex-col border border-base-300 bg-base-100 shadow-xl transition-transform duration-300 ${isTracksMenuOpen ? "translate-x-0" : "-translate-x-full"
-            }`}
+          className={`absolute inset-y-0 left-0 flex w-80 max-w-[85vw] flex-col border border-base-300 bg-base-100 shadow-xl transition-transform duration-300 ${
+            isTracksMenuOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
           aria-label="Tracks"
         >
           <div className="flex items-center justify-between border-b border-base-300 px-4 py-3">
@@ -394,6 +446,7 @@ const Workspace = ({ courseId, uuid, showFileTree, showTabs, editable }: Props) 
               <div className="flex flex-col gap-1">
                 {tracks.map((item) => {
                   const isActive = item.uuid === uuid;
+                  const isComplete = completedTrackIDs.has(item.uuid);
 
                   return (
                     <button
@@ -401,12 +454,21 @@ const Workspace = ({ courseId, uuid, showFileTree, showTabs, editable }: Props) 
                       type="button"
                       tabIndex={isTracksMenuOpen ? 0 : -1}
                       aria-current={isActive ? "page" : undefined}
-                      className={`flex w-full items-center gap-2 rounded-btn px-3 py-2 text-left text-sm transition-colors ${isActive
-                        ? "bg-primary text-primary-content"
-                        : "hover:bg-base-200"
-                        }`}
+                      className={`flex w-full items-center gap-2 rounded-btn px-3 py-2 text-left text-sm transition-colors ${
+                        isActive
+                          ? "bg-primary text-primary-content"
+                          : "hover:bg-base-200"
+                      }`}
                       onClick={() => selectTrack(item.uuid)}
                     >
+                      <input
+                        className="checkbox checkbox-sm pointer-events-none"
+                        type="checkbox"
+                        checked={isComplete}
+                        readOnly
+                        tabIndex={-1}
+                        aria-label={`${item.title} selesai`}
+                      />
                       <span className="font-medium">{item.order}.</span>
                       <span className="truncate">{item.title}</span>
                     </button>
@@ -460,21 +522,20 @@ const Workspace = ({ courseId, uuid, showFileTree, showTabs, editable }: Props) 
       {isDesktopLayout && (
         <div className="min-h-0 flex-1">
           <div className="flex h-full min-w-0">
-            {showTree && !isFileTreeCollapsed &&
-              (
-                <aside className="flex w-72 min-w-60 flex-col border-r border-base-300">
-                  <div className="flex items-center justify-between border-b border-base-300 px-3 py-2">
-                    <span className="text-sm font-medium">Berkas</span>
-                  </div>
-                  <div className="min-h-0 flex-1 overflow-hidden">
-                    {FileTreeComponent ? (
-                      <FileTreeComponent />
-                    ) : (
-                      renderLoadingPane()
-                    )}
-                  </div>
-                </aside>
-              )}
+            {showTree && !isFileTreeCollapsed && (
+              <aside className="flex w-72 min-w-60 flex-col border-r border-base-300">
+                <div className="flex items-center justify-between border-b border-base-300 px-3 py-2">
+                  <span className="text-sm font-medium">Berkas</span>
+                </div>
+                <div className="min-h-0 flex-1 overflow-hidden">
+                  {FileTreeComponent ? (
+                    <FileTreeComponent />
+                  ) : (
+                    renderLoadingPane()
+                  )}
+                </div>
+              </aside>
+            )}
 
             {materialFile ? (
               <Group

@@ -13,6 +13,11 @@ type Track = {
   title: string;
 };
 
+type CourseProgress = {
+  track_id: string;
+  is_done: boolean;
+};
+
 type ListTrackPageProps = {
   onLogout: () => Promise<void>;
 };
@@ -23,27 +28,32 @@ const ListTrackPage = ({ onLogout }: ListTrackPageProps) => {
   const [searchParams] = useSearchParams();
   const courseId = searchParams.get("course_id");
 
-  const navigate = useNavigate()
-  const [courseMeta, setCourseMeta] = useState(useLocation().state as (Course | null))
+  const navigate = useNavigate();
+  const [courseMeta, setCourseMeta] = useState(
+    useLocation().state as Course | null,
+  );
 
   const [tracks, setTracks] = useState<Track[]>([]);
+  const [completedTrackIDs, setCompletedTrackIDs] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading",
   );
 
   useEffect(() => {
-    if (courseMeta !== null) return
+    if (courseMeta !== null) return;
 
     const load = async () => {
-      const resp = await apiFetch(`/courses/${courseId}`)
+      const resp = await apiFetch(`/courses/${courseId}`);
       if (resp.ok) {
-        const body = await resp.json()
-        setCourseMeta(body as Course)
+        const body = await resp.json();
+        setCourseMeta(body as Course);
       }
-    }
+    };
 
-    load()
-  }, [])
+    load();
+  }, []);
 
   useEffect(() => {
     if (!courseId) return;
@@ -53,16 +63,26 @@ const ListTrackPage = ({ onLogout }: ListTrackPageProps) => {
     const load = async () => {
       setStatus("loading");
       try {
-        const response = await apiFetch(
-          `/tracks/?course_id=${encodeURIComponent(courseId)}`,
-          { method: "GET" },
-        );
-        if (!response.ok) throw new Error(String(response.status));
+        const [tracksResponse, progressResponse] = await Promise.all([
+          apiFetch(`/tracks/?course_id=${encodeURIComponent(courseId)}`),
+          apiFetch("/courses/progress"),
+        ]);
+        if (!tracksResponse.ok) throw new Error(String(tracksResponse.status));
 
-        const data = (await response.json()) as Track[];
+        const data = (await tracksResponse.json()) as Track[];
+        const progress = progressResponse.ok
+          ? ((await progressResponse.json()) as CourseProgress[])
+          : [];
         if (cancelled) return;
 
         setTracks([...data].sort((a, b) => a.order - b.order));
+        setCompletedTrackIDs(
+          new Set(
+            progress
+              .filter((item) => item.is_done)
+              .map((item) => item.track_id),
+          ),
+        );
         setStatus("success");
       } catch {
         if (!cancelled) setStatus("error");
@@ -76,11 +96,24 @@ const ListTrackPage = ({ onLogout }: ListTrackPageProps) => {
     };
   }, [courseId]);
 
+  const latestCompletedTrack = tracks.reduce<Track | undefined>(
+    (latest, track) =>
+      completedTrackIDs.has(track.uuid) &&
+      (!latest || track.order > latest.order)
+        ? track
+        : latest,
+    undefined,
+  );
+  const selectedTrack = latestCompletedTrack ?? tracks[0];
+
   return (
     <div className="min-h-screen bg-base-200 text-base-content flex flex-col">
       <header className="navbar bg-base-100 shadow-sm border-b border-base-300 px-4 sm:px-8">
         <div className="flex-1">
-          <Link to="/" className="text-xl font-bold text-primary tracking-tight">
+          <Link
+            to="/"
+            className="text-xl font-bold text-primary tracking-tight"
+          >
             Swadidik
           </Link>
         </div>
@@ -134,8 +167,17 @@ const ListTrackPage = ({ onLogout }: ListTrackPageProps) => {
                   <button
                     className="btn btn-md btn-primary"
                     onClick={() => {
-                      navigate(`/workspace?course_id=${courseMeta?.courseId}`, { state: { tracks, } })
-                    }}>Ikuti</button>
+                      if (!courseId || !selectedTrack) return;
+
+                      navigate(
+                        `/workspace?course_id=${encodeURIComponent(courseId)}&uuid=${encodeURIComponent(selectedTrack.uuid)}`,
+                        { state: { tracks } },
+                      );
+                    }}
+                    disabled={!selectedTrack}
+                  >
+                    Ikuti
+                  </button>
                 </div>
               </div>
             </section>
@@ -164,7 +206,7 @@ const ListTrackPage = ({ onLogout }: ListTrackPageProps) => {
           </div>
         )}
       </main>
-    </div >
+    </div>
   );
 };
 

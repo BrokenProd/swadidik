@@ -8,7 +8,7 @@ import (
 
 const (
 	getCourseProgressQuery = `
-		SELECT track_id, is_done
+		SELECT uuid, track_id, is_done
 		FROM course_progress
 		WHERE user_id = $1
 		ORDER BY track_id`
@@ -24,6 +24,7 @@ const (
 )
 
 type CourseProgress struct {
+	Uuid    string `json:"uuid"`
 	TrackID string `json:"track_id"`
 	Done    bool   `json:"is_done"`
 }
@@ -39,7 +40,7 @@ func GetCourseProgress(ctx context.Context, database *sql.DB, userID string) ([]
 	progress := make([]CourseProgress, 0)
 	for rows.Next() {
 		var item CourseProgress
-		if err := rows.Scan(&item.TrackID, &item.Done); err != nil {
+		if err := rows.Scan(&item.Uuid, &item.TrackID, &item.Done); err != nil {
 			return nil, err
 		}
 		progress = append(progress, item)
