@@ -38,13 +38,13 @@ RUN git clone https://github.com/google/nsjail.git \
 # Stage: java
 FROM base AS java
 
-ARG JDK_VERSION="21.0.12.15"
+ARG JDK_VERSION="25.0.4.15"
 
 RUN apt-get update \
     && apt-get install -y aria2 \
     && rm -rf /var/lib/apt/lists/*
 
-RUN aria2c -x 16 -s 16 "https://github.com/ibmruntimes/semeru21-binaries/releases/download/jdk-${JDK_VERSION}/ibm-semeru-open-jdk_x64_linux_${JDK_VERSION}.tar.gz"
+RUN aria2c -x 16 -s 16 "https://github.com/ibmruntimes/semeru25-binaries/releases/download/jdk-${JDK_VERSION}/ibm-semeru-open-jdk_x64_linux_${JDK_VERSION}.tar.gz"
 RUN tar -xzf "ibm-semeru-open-jdk_x64_linux_${JDK_VERSION}.tar.gz" -C /opt
 RUN mv /opt/jdk-${JDK_VERSION} /opt/jdk
 
