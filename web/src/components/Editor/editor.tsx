@@ -41,8 +41,8 @@ const Editor = ({ file, onReady }: EditorProps) => {
         const view = getEditor(file.filePath).view;
         editorViewRef.current = view;
 
-        const { fontFamily, fontSize, editorTheme } = appearance;
-        const initialTheme = await loadTheme(fontFamily, fontSize, editorTheme);
+        const { fontSize, editorTheme } = appearance;
+        const initialTheme = await loadTheme(fontSize, editorTheme);
         const baseExtensions = await setupExtensions(
           extToContentType(file.filePath),
         );

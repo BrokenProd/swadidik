@@ -17,13 +17,13 @@ const Terminal = () => {
   const updateTheme = useCallback(async () => {
     if (!containerRef.current) return;
 
-    const { fontFamily, fontSize, editorTheme } = appearance;
+    const { fontSize, editorTheme } = appearance;
 
     const settings = await getEditorThemeSettings(editorTheme);
-    await loadFont(fontFamily, fontSize);
+    await loadFont(fontSize);
 
     const style = containerRef.current.style;
-    style.fontFamily = fontFamily;
+    style.fontFamily = "JetBrains Mono";
     style.fontSize = `${fontSize}px`;
     style.color = settings.foreground ?? "#fff";
     style.backgroundColor = settings.background ?? "#1a1b26";

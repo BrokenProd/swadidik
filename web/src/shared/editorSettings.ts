@@ -4,10 +4,8 @@ export const THEMES = {
 } as const;
 
 type ThemeKey = keyof typeof THEMES;
-type FontFamily = "JetBrains Mono" | "Fira Code";
 
 export interface AppearanceSettings {
-  fontFamily: FontFamily;
   fontSize: number;
   editorTheme: ThemeKey;
 }
@@ -20,7 +18,6 @@ export class EditorAppearance {
     const parsed: Partial<AppearanceSettings> = saved ? JSON.parse(saved) : {};
 
     return {
-      fontFamily: "JetBrains Mono",
       fontSize: parsed.fontSize ?? 16,
       editorTheme: parsed.editorTheme ?? "TOKYO_NIGHT",
     };
@@ -32,7 +29,6 @@ export class EditorAppearance {
       ...current,
       ...settings,
       fontSize: settings.fontSize ?? current.fontSize,
-      fontFamily: "JetBrains Mono",
       editorTheme: settings.editorTheme ?? current.editorTheme,
     };
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(updated));

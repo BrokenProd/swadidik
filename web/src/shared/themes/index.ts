@@ -41,18 +41,17 @@ export const getEditorThemeSettings = async (
 };
 
 export const loadTheme = async (
-  fontFamily: string,
   fontSize: number,
   editorTheme: string,
 ) => {
   const themeOptions = {
     settings: {
       fontSize: `${fontSize}px`,
-      fontFamily: fontFamily,
+      fontFamily: "JetBrains Mono",
     },
   };
 
-  await loadFont(fontFamily, fontSize);
+  await loadFont(fontSize);
 
   const themeInit = await getEditorTheme(editorTheme);
   return themeInit(themeOptions);

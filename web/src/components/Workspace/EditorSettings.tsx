@@ -17,8 +17,8 @@ const updateTheme = async (
   file: WorkspaceFile,
   settings: AppearanceSettings,
 ) => {
-  const { fontSize, fontFamily, editorTheme } = settings;
-  const ext = await loadTheme(fontFamily, fontSize, editorTheme);
+  const { fontSize, editorTheme } = settings;
+  const ext = await loadTheme(fontSize, editorTheme);
 
   const { view, themeCompartment } = getEditor(file.filePath);
   view.dispatch({
@@ -50,8 +50,8 @@ const EditorSettings = () => {
     EditorAppearance.save(theme);
     setSettings(theme);
 
-    const { fontSize, fontFamily } = theme;
-    await loadFont(fontFamily, fontSize);
+    const { fontSize } = theme;
+    await loadFont(fontSize);
     await Promise.all(
       Object.values(files).map((file) => updateTheme(file, theme)),
     );
