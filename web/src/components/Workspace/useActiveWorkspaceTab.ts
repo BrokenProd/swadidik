@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import type { WorkspaceFile } from "#/shared/files";
-import type { MobilePane } from "./workspace.types";
 import { getEditor } from "./editorRegistry";
+
+export type MobilePane = "editor" | "files" | "material";
 
 interface UseActiveWorkspaceTabOptions {
   tabs: WorkspaceFile[];

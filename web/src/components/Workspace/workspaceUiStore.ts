@@ -3,8 +3,6 @@ import { immer } from "zustand/middleware/immer";
 import { EditorAppearance } from "#/shared/editorSettings";
 
 export type WorkspaceConfig = {
-  showFileTree: boolean;
-  showTabs: boolean;
   editable: boolean;
 };
 
@@ -15,7 +13,6 @@ interface WorkspaceUiState {
   appearance: ReturnType<typeof EditorAppearance.load>;
   config: WorkspaceConfig;
   isRunning: boolean;
-  isSubmiting: boolean;
   initializeTabs: (paths: string[], selectedPath: string) => void;
   openTab: (path: string) => void;
   setSelectedTab: (path: string) => void;
@@ -27,7 +24,6 @@ interface WorkspaceUiState {
   ) => void;
   updateConfig: (config: Partial<WorkspaceConfig>) => void;
   setRunning: (value: boolean) => void;
-  setSubmiting: (value: boolean) => void;
   toggleFolderExpanded: (path: string) => void;
   setExpandedFolders: (folders: Set<string>) => void;
 }
@@ -38,9 +34,8 @@ export const useWorkspaceUiStore = create<WorkspaceUiState>()(
     selectedTab: "",
     expandedFolders: new Set(),
     appearance: EditorAppearance.load(),
-    config: { showFileTree: true, showTabs: true, editable: true },
+    config: { editable: true },
     isRunning: false,
-    isSubmiting: false,
     initializeTabs: (paths, selectedPath) =>
       set((state) => {
         state.tabs = paths;
@@ -90,15 +85,13 @@ export const useWorkspaceUiStore = create<WorkspaceUiState>()(
       set((state) => {
         state.isRunning = value;
       }),
-    setSubmiting: (value) =>
-      set((state) => {
-        state.isSubmiting = value;
-      }),
     toggleFolderExpanded: (path) =>
       set((state) => {
-        state.expandedFolders.has(path)
-          ? state.expandedFolders.delete(path)
-          : state.expandedFolders.add(path);
+        if (state.expandedFolders.has(path)) {
+          state.expandedFolders.delete(path);
+        } else {
+          state.expandedFolders.add(path);
+        }
       }),
     setExpandedFolders: (folders) =>
       set((state) => {

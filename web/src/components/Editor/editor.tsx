@@ -17,7 +17,6 @@ const initializedViews = new WeakSet<EditorView>();
 
 interface EditorProps {
   file: WorkspaceFile;
-  autoSaveTimer?: number;
   onReady?: () => void;
 }
 

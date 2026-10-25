@@ -10,7 +10,6 @@ const Terminal = () => {
 
   const clearTerminal = useTerminalStore((state) => state.clear);
   const history = useTerminalStore((state) => state.history);
-  const raw = useTerminalStore((state) => state.raw);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -32,7 +31,7 @@ const Terminal = () => {
 
   useEffect(() => {
     updateTheme();
-  }, [appearance, updateTheme, raw, history.length]);
+  }, [updateTheme]);
 
   useEffect(() => {
     if (scrollRef.current) {

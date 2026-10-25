@@ -1,8 +1,7 @@
-import type { JSX } from "react";
+import type { ComponentType } from "react";
 import type { WorkspaceFile } from "#/shared/files";
 import { extToContentType } from "#/shared/files";
 import WorkspaceTabs from "./WorkspaceTabs";
-import type { EditorComponentType } from "./workspace.types";
 import { Play } from "lucide-react";
 import { apiFetch } from "#/shared/api";
 import { useTerminalStore } from "#/components/Terminal/terminalStore";
@@ -12,8 +11,7 @@ interface EditorPaneProps {
   tabs: WorkspaceFile[];
   activeTab?: string;
   showTabs?: boolean;
-  EditorComponent: EditorComponentType | null;
-  renderLoadingPane: () => JSX.Element;
+  EditorComponent: ComponentType<{ file: WorkspaceFile; onReady?: () => void }>;
   fileTreeToggle?: { collapsed: boolean; onToggle: () => void };
   onEditorReady?: () => void;
 }
@@ -23,7 +21,6 @@ const EditorPane = ({
   activeTab,
   showTabs,
   EditorComponent,
-  renderLoadingPane,
   fileTreeToggle,
   onEditorReady,
 }: EditorPaneProps) => {
@@ -74,7 +71,9 @@ const EditorPane = ({
 
   return (
     <div className="h-full flex min-h-0 flex-1 flex-col bg-base-100">
-      {(showTabs === undefined || showTabs) && <WorkspaceTabs fileTree={fileTreeToggle} />}
+      {(showTabs === undefined || showTabs) && (
+        <WorkspaceTabs fileTree={fileTreeToggle} />
+      )}
       <div className="min-h-0 flex-1 overflow-hidden">
         <div className="size-full">
           {tabs.map((file) => (
@@ -104,16 +103,12 @@ const EditorPane = ({
                 </div>
               </div>
               <div className="size-full overflow-y-auto">
-                {EditorComponent ? (
-                  <EditorComponent
-                    file={file}
-                    onReady={
-                      file.filePath === activeTab ? onEditorReady : undefined
-                    }
-                  />
-                ) : (
-                  renderLoadingPane()
-                )}
+                <EditorComponent
+                  file={file}
+                  onReady={
+                    file.filePath === activeTab ? onEditorReady : undefined
+                  }
+                />
               </div>
             </div>
           ))}

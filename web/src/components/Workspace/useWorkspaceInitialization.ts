@@ -8,7 +8,6 @@ import { loadWorkspaceFiles } from "./files";
 interface UseWorkspaceInitializationOptions {
   courseId: string;
   uuid: string;
-  showTabs?: boolean;
   editable?: boolean;
   updateConfig: (config: Partial<WorkspaceConfig>) => void;
 }
@@ -16,7 +15,6 @@ interface UseWorkspaceInitializationOptions {
 export const useWorkspaceInitialization = ({
   courseId,
   uuid,
-  showTabs,
   editable,
   updateConfig,
 }: UseWorkspaceInitializationOptions) => {
@@ -33,14 +31,10 @@ export const useWorkspaceInitialization = ({
   }
 
   useEffect(() => {
-    if (showTabs !== undefined) {
-      updateConfig({ showTabs });
-    }
-
     if (editable !== undefined) {
       updateConfig({ editable });
     }
-  }, [editable, showTabs, updateConfig]);
+  }, [editable, updateConfig]);
 
   useEffect(() => {
     let cancelled = false;

@@ -5,18 +5,8 @@ import { format, register } from "timeago.js";
 import { id_ID } from "timeago.js/lib/lang";
 import { apiFetch } from "#/shared/api";
 import LogoutButton from "#/components/LogoutButton";
-import type { Course } from "#/shared/course";
-
-type Track = {
-  uuid: string;
-  order: number;
-  title: string;
-};
-
-type CourseProgress = {
-  track_id: string;
-  is_done: boolean;
-};
+import type { Course, Track } from "#/shared/course";
+import { useCourseProgress } from "#/shared/useCourseProgress";
 
 type ListTrackPageProps = {
   onLogout: () => Promise<void>;
@@ -34,9 +24,7 @@ const ListTrackPage = ({ onLogout }: ListTrackPageProps) => {
   );
 
   const [tracks, setTracks] = useState<Track[]>([]);
-  const [completedTrackIDs, setCompletedTrackIDs] = useState<Set<string>>(
-    () => new Set(),
-  );
+  const { completedTrackIDs } = useCourseProgress(courseId ?? undefined);
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading",
   );
@@ -53,7 +41,7 @@ const ListTrackPage = ({ onLogout }: ListTrackPageProps) => {
     };
 
     load();
-  }, []);
+  }, [courseId, courseMeta]);
 
   useEffect(() => {
     if (!courseId) return;
@@ -63,26 +51,15 @@ const ListTrackPage = ({ onLogout }: ListTrackPageProps) => {
     const load = async () => {
       setStatus("loading");
       try {
-        const [tracksResponse, progressResponse] = await Promise.all([
-          apiFetch(`/tracks/?course_id=${encodeURIComponent(courseId)}`),
-          apiFetch("/courses/progress"),
-        ]);
+        const tracksResponse = await apiFetch(
+          `/tracks/?course_id=${encodeURIComponent(courseId)}`,
+        );
         if (!tracksResponse.ok) throw new Error(String(tracksResponse.status));
 
         const data = (await tracksResponse.json()) as Track[];
-        const progress = progressResponse.ok
-          ? ((await progressResponse.json()) as CourseProgress[])
-          : [];
         if (cancelled) return;
 
         setTracks([...data].sort((a, b) => a.order - b.order));
-        setCompletedTrackIDs(
-          new Set(
-            progress
-              .filter((item) => item.is_done)
-              .map((item) => item.track_id),
-          ),
-        );
         setStatus("success");
       } catch {
         if (!cancelled) setStatus("error");

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useRef, useState } from "react";
 import type { JSX } from "react";
 import { isMaterialFile, type WorkspaceFile } from "#/shared/files";
 import { Group, Panel, Separator } from "react-resizable-panels";
@@ -17,13 +17,15 @@ import { useFileSystemStore } from "./fileSystemStore";
 import { useWorkspaceUiStore } from "./workspaceUiStore";
 import EditorPane from "./EditorPane";
 import { useDesktopLayout } from "./useDesktopLayout";
-import { useLazyWorkspaceComponents } from "./useLazyWorkspaceComponents";
 import { useWorkspaceInitialization } from "./useWorkspaceInitialization";
 import { useActiveWorkspaceTab } from "./useActiveWorkspaceTab";
 import { loadWorkspaceFiles } from "./files";
-import type { MobilePane } from "./workspace.types";
+import type { MobilePane } from "./useActiveWorkspaceTab";
 import EditorSettings from "./EditorSettings";
 import { useTerminalStore } from "#/components/Terminal/terminalStore";
+import TracksDrawer from "./TracksDrawer";
+import type { Track } from "#/shared/course";
+import { useCourseProgress } from "#/shared/useCourseProgress";
 import { apiFetch } from "#/shared/api";
 
 interface Props {
@@ -34,20 +36,13 @@ interface Props {
   editable?: boolean;
 }
 
-type Track = {
-  uuid: string;
-  order: number;
-  title: string;
-};
-
 type WorkspaceLocationState = {
   tracks?: Track[];
 } | null;
 
-type CourseProgress = {
-  track_id: string;
-  is_done: boolean;
-};
+const Editor = lazy(() => import("#/components/Editor"));
+const FileTree = lazy(() => import("./FileTree"));
+const TerminalPanel = lazy(() => import("./TerminalPanel"));
 
 const MIN_TERMINAL_HEIGHT = 160;
 const MIN_EDITOR_HEIGHT = 220;
@@ -78,13 +73,6 @@ const Workspace = ({
   const handleEditorReady = useCallback(() => setEditorReady(true), []);
   const handleMarkdownReady = useCallback(() => setMarkdownReady(true), []);
 
-  const [prevTrack, setPrevTrack] = useState(uuid);
-  if (prevTrack !== uuid) {
-    setPrevTrack(uuid);
-    setEditorReady(false);
-    setMarkdownReady(false);
-  }
-
   const [maximizeTerminal, setMaximizeTerminal] = useState(false);
   const [isLoadingNextTrack, setIsLoadingNextTrack] = useState(false);
   const [isTracksMenuOpen, setIsTracksMenuOpen] = useState(false);
@@ -99,39 +87,8 @@ const Workspace = ({
   const isDesktopLayout = useDesktopLayout();
 
   const tracks = (useLocation().state as WorkspaceLocationState)?.tracks ?? [];
-  const [completedTrackIDs, setCompletedTrackIDs] = useState<Set<string>>(
-    () => new Set(),
-  );
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadProgress = async () => {
-      try {
-        const response = await apiFetch("/courses/progress");
-        if (!response.ok) return;
-
-        const progress = (await response.json()) as CourseProgress[];
-        if (cancelled) return;
-
-        setCompletedTrackIDs(
-          new Set(
-            progress
-              .filter((item) => item.is_done)
-              .map((item) => item.track_id),
-          ),
-        );
-      } catch {
-        // The workspace remains usable when progress cannot be loaded.
-      }
-    };
-
-    void loadProgress();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [courseId]);
+  const { completedTrackIDs, setCompletedTrackIDs } =
+    useCourseProgress(courseId);
 
   const tabPaths = useWorkspaceUiStore((state) => state.tabs);
   const files = useFileSystemStore((state) => state.files);
@@ -152,7 +109,6 @@ const Workspace = ({
   const { isInitialized, status } = useWorkspaceInitialization({
     courseId,
     uuid,
-    showTabs,
     editable,
     updateConfig,
   });
@@ -164,13 +120,6 @@ const Workspace = ({
     isDesktopLayout,
     mobilePane,
   });
-  const { EditorComponent, FileTreeComponent, TerminalPanelComponent } =
-    useLazyWorkspaceComponents({
-      showTree,
-      isDesktopLayout,
-      mobilePane,
-    });
-
   if (status === "loading" || isLoadingNextTrack) return <LoadingHolder />;
   else if (status === "error") {
     return (
@@ -209,22 +158,23 @@ const Workspace = ({
     (!editorVisible || editorReady) && (!materialVisible || markdownReady);
 
   const editorPane = (
-    <EditorPane
-      tabs={tabs}
-      activeTab={activeTab}
-      showTabs={showTabs}
-      EditorComponent={EditorComponent}
-      renderLoadingPane={renderLoadingPane}
-      onEditorReady={handleEditorReady}
-      fileTreeToggle={
-        isDesktopLayout && showTree
-          ? {
-              collapsed: isFileTreeCollapsed,
-              onToggle: () => setIsFileTreeCollapsed((c) => !c),
-            }
-          : undefined
-      }
-    />
+    <Suspense fallback={renderLoadingPane()}>
+      <EditorPane
+        tabs={tabs}
+        activeTab={activeTab}
+        showTabs={showTabs}
+        EditorComponent={Editor}
+        onEditorReady={handleEditorReady}
+        fileTreeToggle={
+          isDesktopLayout && showTree
+            ? {
+                collapsed: isFileTreeCollapsed,
+                onToggle: () => setIsFileTreeCollapsed((c) => !c),
+              }
+            : undefined
+        }
+      />
+    </Suspense>
   );
 
   const handleTerminalLayoutChanged = (layout: Layout) => {
@@ -329,11 +279,9 @@ const Workspace = ({
         maxSize="75%"
       >
         <div className="size-full min-h-0">
-          {TerminalPanelComponent ? (
-            <TerminalPanelComponent onMaximize={toggleTerminalExpansion} />
-          ) : (
-            renderLoadingPane()
-          )}
+          <Suspense fallback={renderLoadingPane()}>
+            <TerminalPanel onMaximize={toggleTerminalExpansion} />
+          </Suspense>
         </div>
       </Panel>
     </Group>
@@ -343,11 +291,9 @@ const Workspace = ({
     <div className="flex h-full min-h-0 flex-col gap-2">
       <div className="min-h-0 flex-1">{editorPane}</div>
       <div className="h-[38%] min-h-48 overflow-hidden">
-        {TerminalPanelComponent ? (
-          <TerminalPanelComponent />
-        ) : (
-          renderLoadingPane()
-        )}
+        <Suspense fallback={renderLoadingPane()}>
+          <TerminalPanel />
+        </Suspense>
       </div>
     </div>
   );
@@ -403,82 +349,14 @@ const Workspace = ({
         </nav>
       </header>
 
-      <div
-        className={`absolute inset-x-2 bottom-2 top-[52px] z-30 transition-[visibility] duration-300 ${
-          isTracksMenuOpen ? "visible" : "invisible delay-300"
-        }`}
-        aria-hidden={!isTracksMenuOpen}
-      >
-        <button
-          className={`absolute inset-0 cursor-default bg-neutral/20 transition-opacity duration-300 ${
-            isTracksMenuOpen ? "opacity-100" : "opacity-0"
-          }`}
-          type="button"
-          tabIndex={isTracksMenuOpen ? 0 : -1}
-          aria-label="Close tracks drawer"
-          onClick={() => setIsTracksMenuOpen(false)}
-        />
-        <aside
-          id="workspace-tracks-drawer"
-          className={`absolute inset-y-0 left-0 flex w-80 max-w-[85vw] flex-col border border-base-300 bg-base-100 shadow-xl transition-transform duration-300 ${
-            isTracksMenuOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-          aria-label="Tracks"
-        >
-          <div className="flex items-center justify-between border-b border-base-300 px-4 py-3">
-            <span className="font-semibold">Daftar Materi</span>
-            <button
-              className="btn btn-ghost btn-sm btn-square"
-              type="button"
-              tabIndex={isTracksMenuOpen ? 0 : -1}
-              aria-label="Close tracks drawer"
-              onClick={() => setIsTracksMenuOpen(false)}
-            >
-              <CircleX className="size-5" />
-            </button>
-          </div>
-          <div className="min-h-0 flex-1 overflow-y-auto p-2">
-            {tracks.length === 0 ? (
-              <p className="px-3 py-2 text-sm text-base-content/60">
-                Tidak ada materi.
-              </p>
-            ) : (
-              <div className="flex flex-col gap-1">
-                {tracks.map((item) => {
-                  const isActive = item.uuid === uuid;
-                  const isComplete = completedTrackIDs.has(item.uuid);
-
-                  return (
-                    <button
-                      key={item.uuid}
-                      type="button"
-                      tabIndex={isTracksMenuOpen ? 0 : -1}
-                      aria-current={isActive ? "page" : undefined}
-                      className={`flex w-full items-center gap-2 rounded-btn px-3 py-2 text-left text-sm transition-colors ${
-                        isActive
-                          ? "bg-primary text-primary-content"
-                          : "hover:bg-base-200"
-                      }`}
-                      onClick={() => selectTrack(item.uuid)}
-                    >
-                      <input
-                        className="checkbox checkbox-sm pointer-events-none"
-                        type="checkbox"
-                        checked={isComplete}
-                        readOnly
-                        tabIndex={-1}
-                        aria-label={`${item.title} selesai`}
-                      />
-                      <span className="font-medium">{item.order}.</span>
-                      <span className="truncate">{item.title}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </aside>
-      </div>
+      <TracksDrawer
+        tracks={tracks}
+        activeTrackUuid={uuid}
+        completedTrackIDs={completedTrackIDs}
+        isOpen={isTracksMenuOpen}
+        onClose={() => setIsTracksMenuOpen(false)}
+        onSelect={selectTrack}
+      />
 
       {!isDesktopLayout && (
         <>
@@ -498,11 +376,9 @@ const Workspace = ({
             {mobilePane === "editor" && mobileEditorPane}
             {mobilePane === "files" && showTree && (
               <div className="h-full overflow-hidden">
-                {FileTreeComponent ? (
-                  <FileTreeComponent />
-                ) : (
-                  renderLoadingPane()
-                )}
+                <Suspense fallback={renderLoadingPane()}>
+                  <FileTree />
+                </Suspense>
               </div>
             )}
             {mobilePane === "material" && (
@@ -528,11 +404,9 @@ const Workspace = ({
                   <span className="text-sm font-medium">Berkas</span>
                 </div>
                 <div className="min-h-0 flex-1 overflow-hidden">
-                  {FileTreeComponent ? (
-                    <FileTreeComponent />
-                  ) : (
-                    renderLoadingPane()
-                  )}
+                  <Suspense fallback={renderLoadingPane()}>
+                    <FileTree />
+                  </Suspense>
                 </div>
               </aside>
             )}

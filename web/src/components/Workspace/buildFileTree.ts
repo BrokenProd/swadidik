@@ -19,112 +19,45 @@ export const buildFileTree = (
   const root: FileNode[] = [];
   const folderMap = new Map<string, FileNode>();
 
-  const sortedFiles = [...files].sort((a, b) => {
-    return naturalCompare(a.filePath, b.filePath);
-  });
-
-  const allPaths = new Set<string>();
-
-  folders.forEach((folder) => {
-    const parts = folder.split("/").filter(Boolean);
-    let currentPath = "";
-
-    parts.forEach((part, index) => {
-      const isRootFolder = index === 0;
-      currentPath = currentPath ? `${currentPath}/${part}` : `/${part}`;
-
-      if (!allPaths.has(currentPath)) {
-        allPaths.add(currentPath);
-
-        let folder = folderMap.get(currentPath);
-        if (!folder) {
-          folder = {
-            name: part,
-            path: currentPath,
-            type: "folder",
-            children: [],
-            isRoot: isRootFolder,
-          };
-          folderMap.set(currentPath, folder);
-        }
-      }
-    });
-  });
-
-  sortedFiles.forEach((file) => {
-    const parts = file.filePath.split("/").filter(Boolean);
-    let currentPath = "";
-
-    parts.forEach((part, index) => {
-      const isFile = index === parts.length - 1;
-      const isRootFolder = index === 0;
-      currentPath = currentPath ? `${currentPath}/${part}` : `/${part}`;
-
-      if (isFile) {
-        allPaths.add(currentPath);
-      } else {
-        if (!allPaths.has(currentPath)) {
-          allPaths.add(currentPath);
-
-          let folder = folderMap.get(currentPath);
-          if (!folder) {
-            folder = {
-              name: part,
-              path: currentPath,
-              type: "folder",
-              children: [],
-              isRoot: isRootFolder,
-            };
-            folderMap.set(currentPath, folder);
-          }
-        }
-      }
-    });
-  });
-
-  sortedFiles.forEach((file) => {
-    const parts = file.filePath.split("/").filter(Boolean);
+  const ensureFolderChain = (parts: string[]) => {
     let currentPath = "";
     let currentLevel = root;
 
     parts.forEach((part, index) => {
-      const isFile = index === parts.length - 1;
       currentPath = currentPath ? `${currentPath}/${part}` : `/${part}`;
-
-      if (isFile) {
-        currentLevel.push({
+      let folder = folderMap.get(currentPath);
+      if (!folder) {
+        folder = {
           name: part,
           path: currentPath,
-          type: "file",
-          file,
-        });
-      } else {
-        const folder = folderMap.get(currentPath);
-        if (folder) {
-          if (!currentLevel.includes(folder)) {
-            currentLevel.push(folder);
-          }
-          currentLevel = folder.children!;
-        }
+          type: "folder",
+          children: [],
+          isRoot: index === 0,
+        };
+        folderMap.set(currentPath, folder);
+        currentLevel.push(folder);
       }
+      currentLevel = folder.children!;
     });
-  });
+
+    return currentLevel;
+  };
 
   folders.forEach((folderPath) => {
-    const parts = folderPath.split("/").filter(Boolean);
-    let currentPath = "";
-    let currentLevel = root;
+    ensureFolderChain(folderPath.split("/").filter(Boolean));
+  });
 
-    parts.forEach((part) => {
-      currentPath = currentPath ? `${currentPath}/${part}` : `/${part}`;
-      const folder = folderMap.get(currentPath);
+  files.forEach((file) => {
+    const parts = file.filePath.split("/").filter(Boolean);
+    const fileName = parts.pop();
+    if (!fileName) return;
 
-      if (folder) {
-        if (!currentLevel.includes(folder)) {
-          currentLevel.push(folder);
-        }
-        currentLevel = folder.children!;
-      }
+    const parent = ensureFolderChain(parts);
+    parent.push({
+      name: fileName,
+      path: file.filePath,
+      type: "file",
+      file,
     });
   });
 

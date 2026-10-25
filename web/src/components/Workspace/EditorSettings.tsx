@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Settings2, X, Moon, Sun } from "lucide-react";
 import { useFileSystemStore } from "./fileSystemStore";
 import { useWorkspaceUiStore } from "./workspaceUiStore";
@@ -12,6 +12,8 @@ import {
 
 import loadFont from "#/fonts";
 import { useTheme } from "#/shared/theme";
+
+const FONTS = ["JetBrains Mono", "Fira Code"];
 
 const updateTheme = async (
   file: WorkspaceFile,
@@ -27,14 +29,12 @@ const updateTheme = async (
 };
 
 const EditorSettings = () => {
-  const selectedTab = useWorkspaceUiStore((state) => state.selectedTab);
   const files = useFileSystemStore((state) => state.files);
 
   const [open, setOpen] = useState(false);
   const settings = useWorkspaceUiStore((state) => state.appearance);
   const setSettings = useWorkspaceUiStore((state) => state.updateAppearance);
 
-  const fonts = useMemo(() => ["JetBrains Mono", "Fira Code"], []);
   const isLightMode = settings.editorTheme === "TOKYO_NIGHT_DAY";
 
   const { setTheme } = useTheme();
@@ -59,16 +59,6 @@ const EditorSettings = () => {
     );
   };
 
-  const change = (state: boolean) => {
-    setOpen(state);
-
-    if (!state) {
-      Object.values(files)
-        .filter((f) => f.filePath !== selectedTab)
-        .forEach((f) => updateTheme(f, settings));
-    }
-  };
-
   return (
     <>
       <button
@@ -87,13 +77,13 @@ const EditorSettings = () => {
         id="editor-settings-modal"
         className="modal-toggle"
         checked={open}
-        onChange={(e) => change(e.currentTarget.checked)}
+        onChange={(e) => setOpen(e.currentTarget.checked)}
       />
       <div className="modal modal-bottom sm:modal-middle">
         <div className="modal-box relative">
           <button
             className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-            onClick={() => change(false)}
+            onClick={() => setOpen(false)}
           >
             <X className="size-4" />
           </button>
@@ -136,7 +126,7 @@ const EditorSettings = () => {
                   handleChange("fontFamily", e.currentTarget.value)
                 }
               >
-                {fonts.map((font) => (
+                {FONTS.map((font) => (
                   <option key={font} value={font}>
                     {font}
                   </option>
@@ -172,7 +162,7 @@ const EditorSettings = () => {
             </div>
           </div>
         </div>
-        <label className="modal-backdrop" onClick={() => change(false)}>
+        <label className="modal-backdrop" onClick={() => setOpen(false)}>
           Close
         </label>
       </div>

@@ -1,11 +1,6 @@
 import Workspace from "#/components/Workspace";
 import { useLocation } from "react-router";
-
-type Track = {
-  uuid: string;
-  order: number;
-  title: string;
-};
+import type { Track } from "#/shared/course";
 
 function WorkspacePage() {
   const { state } = useLocation();

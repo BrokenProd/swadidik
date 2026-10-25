@@ -1,5 +1,10 @@
-import { useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, X, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  X,
+  PanelLeftClose,
+  PanelLeftOpen,
+} from "lucide-react";
 import { useFileSystemStore } from "./fileSystemStore";
 import { useWorkspaceUiStore } from "./workspaceUiStore";
 import { isMaterialFile, type WorkspaceFile } from "#/shared/files";
@@ -57,57 +62,35 @@ const WorkspaceTabs = ({ fileTree }: WorkspaceTabsProps) => {
   const files = useFileSystemStore((state) => state.files);
   const tabs = tabPaths
     .map((path) => files[path])
-    .filter(
-      (file): file is WorkspaceFile => Boolean(file && !isMaterialFile(file.filePath)),
+    .filter((file): file is WorkspaceFile =>
+      Boolean(file && !isMaterialFile(file.filePath)),
     );
   const selectedTab = useWorkspaceUiStore((state) => state.selectedTab);
   const setSelectedTab = useWorkspaceUiStore((state) => state.setSelectedTab);
   const removeTab = useWorkspaceUiStore((state) => state.removeTab);
 
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [canNavigateLeft, setCanNavigateLeft] = useState(
-    currentIndex > 0 && tabs.length > 1,
-  );
-  const [canNavigateRight, setCanNavigateRight] = useState(
-    currentIndex < tabs.length - 1 && tabs.length > 1,
-  );
+  const currentIndex = tabs.findIndex((file) => file.filePath === selectedTab);
+  const canNavigateLeft = currentIndex > 0;
+  const canNavigateRight = currentIndex >= 0 && currentIndex < tabs.length - 1;
 
   const navigate = (direction: "left" | "right") => {
-    const idx = tabs.findIndex((f) => f.filePath === selectedTab);
-    if (idx === -1) return;
-
-    const newIndex = direction === "left" ? idx - 1 : idx + 1;
+    const newIndex = direction === "left" ? currentIndex - 1 : currentIndex + 1;
     if (newIndex >= 0 && newIndex < tabs.length) {
       setSelectedTab(tabs[newIndex].filePath);
-      setCurrentIndex(newIndex);
-      setCanNavigateLeft(newIndex > 0 && tabs.length > 1);
-      setCanNavigateRight(newIndex < tabs.length - 1 && tabs.length > 1);
     }
   };
-
-  useEffect(() => {
-    const inner = async () => {
-      const idx = tabs.findIndex((f) => f.filePath === selectedTab);
-      if (idx === -1) return;
-
-      setCurrentIndex(idx);
-      setCanNavigateLeft(idx > 0 && tabs.length > 1);
-      setCanNavigateRight(idx < tabs.length - 1 && tabs.length > 1);
-    };
-
-    inner();
-  }, [selectedTab, tabs]);
 
   return (
     <div className="bg-base-200 border-b border-base-300 flex items-center gap-2 px-2">
       <div className="flex items-center gap-1 shrink-0">
-
         {fileTree && (
           <button
             className="btn btn-ghost btn-sm btn-square"
             onClick={fileTree.onToggle}
             aria-label={
-              fileTree.collapsed ? "Expand file manager" : "Collapse file manager"
+              fileTree.collapsed
+                ? "Expand file manager"
+                : "Collapse file manager"
             }
             aria-expanded={!fileTree.collapsed}
           >
@@ -146,13 +129,7 @@ const WorkspaceTabs = ({ fileTree }: WorkspaceTabsProps) => {
               file={file}
               isActive={selectedTab === file.filePath}
               showClose
-              onSelect={() => {
-                const idx = tabs.findIndex((t) => t.filePath === file.filePath);
-                setCurrentIndex(idx);
-                setSelectedTab(file.filePath);
-                setCanNavigateLeft(idx > 0 && tabs.length > 1);
-                setCanNavigateRight(idx < tabs.length - 1 && tabs.length > 1);
-              }}
+              onSelect={() => setSelectedTab(file.filePath)}
               onClose={() => removeTab(file.filePath)}
             />
           ))}
