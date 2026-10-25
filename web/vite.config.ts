@@ -3,7 +3,6 @@ import path from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 
-import { cloudflare } from "@cloudflare/vite-plugin";
 
 // https://vite.dev/config/
 export default defineConfig(({ command }) => {
@@ -35,7 +34,7 @@ export default defineConfig(({ command }) => {
               "Cross-Origin-Opener-Policy": "same-origin",
             },
           },
-    plugins: [tailwindcss(), react(), cloudflare()],
+    plugins: [tailwindcss(), react()],
     resolve: {
       alias: {
         "#": path.resolve(__dirname, "./src"),
