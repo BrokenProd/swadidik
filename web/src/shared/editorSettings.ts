@@ -20,7 +20,7 @@ export class EditorAppearance {
     const parsed: Partial<AppearanceSettings> = saved ? JSON.parse(saved) : {};
 
     return {
-      fontFamily: parsed.fontFamily ?? "JetBrains Mono",
+      fontFamily: "JetBrains Mono",
       fontSize: parsed.fontSize ?? 16,
       editorTheme: parsed.editorTheme ?? "TOKYO_NIGHT",
     };
@@ -32,7 +32,7 @@ export class EditorAppearance {
       ...current,
       ...settings,
       fontSize: settings.fontSize ?? current.fontSize,
-      fontFamily: settings.fontFamily ?? current.fontFamily,
+      fontFamily: "JetBrains Mono",
       editorTheme: settings.editorTheme ?? current.editorTheme,
     };
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(updated));

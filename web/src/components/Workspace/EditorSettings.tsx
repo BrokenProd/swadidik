@@ -13,8 +13,6 @@ import {
 import loadFont from "#/fonts";
 import { useTheme } from "#/shared/theme";
 
-const FONTS = ["JetBrains Mono", "Fira Code"];
-
 const updateTheme = async (
   file: WorkspaceFile,
   settings: AppearanceSettings,
@@ -113,25 +111,6 @@ const EditorSettings = () => {
                   <Sun />
                 </label>
               </fieldset>
-            </div>
-
-            <div className="form-control w-full">
-              <label className="label">
-                <span className="label-text">Fonta</span>
-              </label>
-              <select
-                className="select w-full"
-                value={settings.fontFamily}
-                onChange={(e) =>
-                  handleChange("fontFamily", e.currentTarget.value)
-                }
-              >
-                {FONTS.map((font) => (
-                  <option key={font} value={font}>
-                    {font}
-                  </option>
-                ))}
-              </select>
             </div>
 
             <div className="form-control w-full">
