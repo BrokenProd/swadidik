@@ -1,0 +1,62 @@
+@import "../fonts/JetBrainsMono.css";
+@import "@milkdown/crepe/theme/common/style.css";
+@import "@milkdown/crepe/theme/classic.css";
+
+.markdown-panel {
+  min-height: 100%;
+}
+
+.markdown-panel .milkdown {
+  min-height: 100%;
+  --crepe-font-default: "JetBrains Mono", monospace;
+  --crepe-font-title: "JetBrains Mono", monospace;
+  --crepe-font-code: "JetBrains Mono", monospace;
+  font-family: "JetBrains Mono", monospace;
+  --crepe-color-background: #1a1b26;
+  --crepe-color-on-background: #c0caf5;
+  --crepe-color-surface: #16161e;
+  --crepe-color-surface-low: #1f2335;
+  --crepe-color-on-surface: #c0caf5;
+  --crepe-color-on-surface-variant: #787c99;
+  --crepe-color-outline: #565f89;
+  --crepe-color-primary: #7aa2f7;
+  --crepe-color-secondary: #bb9af7;
+  --crepe-color-on-secondary: #1a1b26;
+  --crepe-color-inverse: #c0caf5;
+  --crepe-color-on-inverse: #1a1b26;
+  --crepe-color-inline-code: #9ece6a;
+  --crepe-color-error: #f7768e;
+  --crepe-color-hover: #292e42;
+  --crepe-color-selected: #3b4261;
+  --crepe-color-inline-area: #24283b;
+}
+
+.markdown-panel .milkdown .ProseMirror {
+  font-family: "JetBrains Mono", monospace;
+  min-height: 100%;
+  padding: 1rem 1rem 1rem 6rem;
+  outline: none;
+}
+
+.markdown-panel .milkdown .ProseMirror h1,
+.markdown-panel .milkdown .ProseMirror h2,
+.markdown-panel .milkdown .ProseMirror h3,
+.markdown-panel .milkdown .ProseMirror h4,
+.markdown-panel .milkdown .ProseMirror h5,
+.markdown-panel .milkdown .ProseMirror h6 {
+  all: revert-layer;
+  font-family: "JetBrains Mono", monospace;
+  font-size: revert-layer;
+  font-weight: revert-layer;
+  line-height: revert-layer;
+  letter-spacing: revert-layer;
+  margin-top: revert-layer;
+  padding: revert-layer;
+}
+
+.markdown-panel .milkdown .ProseMirror pre,
+.markdown-panel .milkdown .milkdown-code-block {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  padding-bottom: 0.5rem;
+}
