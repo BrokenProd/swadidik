@@ -222,6 +222,36 @@ const Workspace = ({
     changeTrack(selectedTrackUuid);
   };
 
+  const toggleTrackCompletion = async (
+    trackId: string,
+    isComplete: boolean,
+  ) => {
+    setCompletedTrackIDs((trackIDs) => {
+      const nextTrackIDs = new Set(trackIDs);
+      if (isComplete) nextTrackIDs.add(trackId);
+      else nextTrackIDs.delete(trackId);
+      return nextTrackIDs;
+    });
+
+    try {
+      const response = await apiFetch("/courses/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ track_id: trackId, is_done: isComplete }),
+      });
+      if (response.ok) return;
+    } catch {
+      // Revert the optimistic update below.
+    }
+
+    setCompletedTrackIDs((trackIDs) => {
+      const nextTrackIDs = new Set(trackIDs);
+      if (isComplete) nextTrackIDs.delete(trackId);
+      else nextTrackIDs.add(trackId);
+      return nextTrackIDs;
+    });
+  };
+
   const changeToNextTrack = async () => {
     const currentTrackIndex = tracks.findIndex((item) => item.uuid === uuid);
     const nextTrack = tracks[currentTrackIndex + 1];
@@ -356,6 +386,9 @@ const Workspace = ({
         isOpen={isTracksMenuOpen}
         onClose={() => setIsTracksMenuOpen(false)}
         onSelect={selectTrack}
+        onToggleCompletion={(trackId, isComplete) =>
+          void toggleTrackCompletion(trackId, isComplete)
+        }
       />
 
       {!isDesktopLayout && (

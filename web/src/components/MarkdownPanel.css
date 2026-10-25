@@ -1,0 +1,33 @@
+@import "@milkdown/crepe/theme/common/style.css";
+@import "@milkdown/crepe/theme/classic.css";
+
+.markdown-panel .milkdown {
+  --crepe-color-background: #1a1b26;
+  --crepe-color-on-background: #c0caf5;
+  --crepe-color-surface: #16161e;
+  --crepe-color-surface-low: #1f2335;
+  --crepe-color-on-surface: #c0caf5;
+  --crepe-color-on-surface-variant: #787c99;
+  --crepe-color-outline: #565f89;
+  --crepe-color-primary: #7aa2f7;
+  --crepe-color-secondary: #bb9af7;
+  --crepe-color-on-secondary: #1a1b26;
+  --crepe-color-inverse: #c0caf5;
+  --crepe-color-on-inverse: #1a1b26;
+  --crepe-color-inline-code: #9ece6a;
+  --crepe-color-error: #f7768e;
+  --crepe-color-hover: #292e42;
+  --crepe-color-selected: #3b4261;
+  --crepe-color-inline-area: #24283b;
+}
+
+.markdown-panel .milkdown .ProseMirror {
+  padding: 1rem;
+}
+
+.markdown-panel .milkdown .ProseMirror pre,
+.markdown-panel .milkdown .milkdown-code-block {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  padding-bottom: 0.5rem;
+}
