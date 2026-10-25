@@ -1,7 +1,17 @@
+@import "../fonts/JetBrainsMono.css";
 @import "@milkdown/crepe/theme/common/style.css";
 @import "@milkdown/crepe/theme/classic.css";
 
+.markdown-panel {
+  min-height: 100%;
+}
+
 .markdown-panel .milkdown {
+  min-height: 100%;
+  --crepe-font-default: "JetBrains Mono", monospace;
+  --crepe-font-title: "JetBrains Mono", monospace;
+  --crepe-font-code: "JetBrains Mono", monospace;
+  font-family: "JetBrains Mono", monospace;
   --crepe-color-background: #1a1b26;
   --crepe-color-on-background: #c0caf5;
   --crepe-color-surface: #16161e;
@@ -22,7 +32,26 @@
 }
 
 .markdown-panel .milkdown .ProseMirror {
+  font-family: "JetBrains Mono", monospace;
+  min-height: 100%;
   padding: 1rem;
+  outline: none;
+}
+
+.markdown-panel .milkdown .ProseMirror h1,
+.markdown-panel .milkdown .ProseMirror h2,
+.markdown-panel .milkdown .ProseMirror h3,
+.markdown-panel .milkdown .ProseMirror h4,
+.markdown-panel .milkdown .ProseMirror h5,
+.markdown-panel .milkdown .ProseMirror h6 {
+  all: revert-layer;
+  font-family: "JetBrains Mono", monospace;
+  font-size: revert-layer;
+  font-weight: revert-layer;
+  line-height: revert-layer;
+  letter-spacing: revert-layer;
+  margin-top: revert-layer;
+  padding: revert-layer;
 }
 
 .markdown-panel .milkdown .ProseMirror pre,
