@@ -6,12 +6,14 @@ interface MarkdownEditorProps {
   markdown: string;
   onChange: (markdown: string) => void;
   onReady?: () => void;
+  readOnly?: boolean;
 }
 
 const MarkdownEditor = ({
   markdown,
   onChange,
   onReady,
+  readOnly = false,
 }: MarkdownEditorProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const initialMarkdownRef = useRef(markdown);
@@ -34,7 +36,12 @@ const MarkdownEditor = ({
     const crepe = new Crepe({
       root,
       defaultValue: initialMarkdownRef.current,
+      features: {
+        [Crepe.Feature.TopBar]: !readOnly,
+        [Crepe.Feature.Toolbar]: false,
+      },
     });
+    crepe.setReadonly(readOnly);
     crepe.on((listener) => {
       listener.markdownUpdated((_ctx, nextMarkdown) => {
         onChangeRef.current(nextMarkdown);
@@ -56,7 +63,7 @@ const MarkdownEditor = ({
       disposed = true;
       void crepe.destroy();
     };
-  }, []);
+  }, [readOnly]);
 
   return (
     <article className="markdown-panel markdown-editor">

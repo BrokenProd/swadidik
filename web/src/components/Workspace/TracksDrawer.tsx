@@ -63,33 +63,31 @@ const TracksDrawer = ({
               const isComplete = completedTrackIDs.has(track.uuid);
 
               return (
-                <div>
-                  <div
-                    key={track.uuid}
-                    aria-current={isActive ? "page" : undefined}
-                    className={`flex w-full items-center gap-2 rounded-btn px-3 py-2 text-left text-sm transition-colors ${isActive
-                        ? "bg-primary text-primary-content"
-                        : "hover:bg-base-200"
-                      }`}
+                <div
+                  key={track.uuid}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`flex w-full items-center gap-2 rounded-btn px-3 py-2 text-left text-sm transition-colors ${isActive
+                    ? "bg-primary text-primary-content"
+                    : "hover:bg-base-200"
+                    }`}
+                >
+                  <input
+                    className="checkbox checkbox-sm"
+                    type="checkbox"
+                    checked={isComplete}
+                    readOnly
+                    aria-label={`${track.title} selesai`}
+                    onClick={() => onToggleCompletion(track.uuid, !isComplete)}
+                  />
+                  <button
+                    className="min-w-0 flex-1 text-left"
+                    type="button"
+                    tabIndex={isOpen ? 0 : -1}
+                    onClick={() => onSelect(track.uuid)}
                   >
-                    <input
-                      className="checkbox checkbox-sm"
-                      type="checkbox"
-                      checked={isComplete}
-                      readOnly
-                      aria-label={`${track.title} selesai`}
-                      onClick={() => onToggleCompletion(track.uuid, !isComplete)}
-                    />
-                    <button
-                      className="min-w-0 flex-1 text-left"
-                      type="button"
-                      tabIndex={isOpen ? 0 : -1}
-                      onClick={() => onSelect(track.uuid)}
-                    >
-                      <span className="font-medium">{track.order}.</span>
-                      <span className="truncate">{track.title}</span>
-                    </button>
-                  </div>
+                    <span className="font-medium">{track.order}.</span>
+                    <span className="truncate">{track.title}</span>
+                  </button>
                 </div>
               );
             })}
