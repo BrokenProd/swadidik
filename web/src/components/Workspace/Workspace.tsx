@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import type { JSX } from "react";
 import { isMaterialFile, type WorkspaceFile } from "#/shared/files";
 import { Group, Panel, Separator } from "react-resizable-panels";
@@ -77,6 +77,7 @@ const Workspace = ({
   const [isLoadingNextTrack, setIsLoadingNextTrack] = useState(false);
   const [isTracksMenuOpen, setIsTracksMenuOpen] = useState(false);
   const [isFileTreeCollapsed, setIsFileTreeCollapsed] = useState(false);
+  const fileTreePanelRef = useRef<{ collapse: () => void; expand: () => void } | null>(null);
   const [mobilePane, setMobilePane] = useState<MobilePane>("editor");
   const [terminalLayout, setTerminalLayout] = useState<Layout>({
     [PANEL_IDS.editor]: 70,
@@ -106,6 +107,16 @@ const Workspace = ({
   const clearTerminal = useTerminalStore((state) => state.clear);
 
   const showTree = showFileTree === undefined || showFileTree;
+
+  useEffect(() => {
+    if (fileTreePanelRef.current) {
+      if (isFileTreeCollapsed) {
+        fileTreePanelRef.current.collapse();
+      } else {
+        fileTreePanelRef.current.expand();
+      }
+    }
+  }, [isFileTreeCollapsed]);
 
   const { isInitialized, status } = useWorkspaceInitialization({
     courseId,
@@ -431,46 +442,39 @@ const Workspace = ({
 
       {isDesktopLayout && (
         <div className="min-h-0 flex-1">
-          <div className="flex h-full min-w-0">
-            {showTree && !isFileTreeCollapsed && (
-              <aside className="flex w-72 min-w-60 flex-col border-r border-base-300">
-                <div className="flex items-center justify-between border-b border-base-300 px-3 py-2">
-                  <span className="text-sm font-medium">Berkas</span>
-                </div>
-                <div className="min-h-0 flex-1 overflow-hidden">
-                  <Suspense fallback={renderLoadingPane()}>
-                    <FileTree />
-                  </Suspense>
-                </div>
-              </aside>
+          <Group orientation="horizontal" className="w-full h-full">
+            {showTree && (
+              <>
+                <Panel
+                  defaultSize={25}
+                  minSize={20}
+                  collapsible
+                  collapsedSize={0}
+                  panelRef={fileTreePanelRef}
+                  className="min-w-0"
+                >
+                  <aside className="w-full h-full border-r border-base-300">
+                    <div className="flex items-center justify-between border-b border-base-300 px-3 py-2">
+                      <span className="text-sm font-medium">Berkas</span>
+                    </div>
+                    <div className="min-h-0 flex-1 overflow-hidden">
+                      <Suspense fallback={renderLoadingPane()}>
+                        <FileTree />
+                      </Suspense>
+                    </div>
+                  </aside>
+                </Panel>
+                <Separator className="w-2 bg-base-300 hover:bg-primary cursor-col-resize active:bg-primary active:opacity-50" />
+              </>
             )}
 
             {materialFile ? (
-              <Group
-                orientation="horizontal"
-                className="min-h-0 min-w-0 flex-1"
-                id="workspace-content-group"
-              >
-                <Panel
-                  id="workspace-main-panel"
-                  minSize="320px"
-                  defaultSize="55%"
-                >
-                  <div className="size-full min-h-0 min-w-0">
-                    {desktopMainColumn}
-                  </div>
+              <>
+                <Panel defaultSize={50} minSize={30} className="min-w-0">
+                  <div className="size-full min-h-0 min-w-0">{desktopMainColumn}</div>
                 </Panel>
-
-                <Separator
-                  className="w-1 shrink-0 cursor-col-resize bg-base-300 transition-colors hover:bg-base-content/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                  id="workspace-material-separator"
-                />
-
-                <Panel
-                  id="workspace-material-panel"
-                  minSize="280px"
-                  defaultSize="45%"
-                >
+                <Separator className="w-2 bg-base-300 hover:bg-primary cursor-col-resize active:bg-primary active:opacity-50" />
+                <Panel defaultSize={25} minSize={20} className="min-w-0">
                   <aside className="flex size-full min-h-0 flex-col bg-base-100">
                     <div className="min-h-0 flex-1 overflow-y-auto">
                       <MarkdownPanel
@@ -480,11 +484,13 @@ const Workspace = ({
                     </div>
                   </aside>
                 </Panel>
-              </Group>
+              </>
             ) : (
-              <div className="min-h-0 min-w-0 flex-1">{desktopMainColumn}</div>
+              <Panel defaultSize={100} className="min-w-0">
+                <div className="size-full min-h-0 min-w-0">{desktopMainColumn}</div>
+              </Panel>
             )}
-          </div>
+          </Group>
         </div>
       )}
 
