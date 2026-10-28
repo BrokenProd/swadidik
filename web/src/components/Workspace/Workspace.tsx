@@ -2,7 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react"
 import type { JSX } from "react";
 import { isMaterialFile, type WorkspaceFile } from "#/shared/files";
 import { Group, Panel, Separator } from "react-resizable-panels";
-import type { GroupImperativeHandle, Layout } from "react-resizable-panels";
+import type { GroupImperativeHandle, Layout, PanelImperativeHandle } from "react-resizable-panels";
 import {
   ChevronLeft,
   ChevronRight,
@@ -77,7 +77,7 @@ const Workspace = ({
   const [isLoadingNextTrack, setIsLoadingNextTrack] = useState(false);
   const [isTracksMenuOpen, setIsTracksMenuOpen] = useState(false);
   const [isFileTreeCollapsed, setIsFileTreeCollapsed] = useState(false);
-  const fileTreePanelRef = useRef<{ collapse: () => void; expand: () => void } | null>(null);
+  const fileTreePanelRef = useRef<PanelImperativeHandle | null>(null);
   const [mobilePane, setMobilePane] = useState<MobilePane>("editor");
   const [terminalLayout, setTerminalLayout] = useState<Layout>({
     [PANEL_IDS.editor]: 70,
