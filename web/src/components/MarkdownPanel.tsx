@@ -10,7 +10,7 @@ const MarkdownPanel = ({ markdown, onReady }: Props) => {
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    import("./MarkdownPanel.css")
+    import("./MarkdownPanel.css");
     const root = rootRef.current;
     if (!root) return;
 
