@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import { Crepe } from "@milkdown/crepe";
-import "./MarkdownEditor.css";
 
 interface MarkdownEditorProps {
   markdown: string;
@@ -29,6 +28,7 @@ const MarkdownEditor = ({
   }, [onReady]);
 
   useEffect(() => {
+    import("./MarkdownEditor.css");
     const root = rootRef.current;
     if (!root) return;
 

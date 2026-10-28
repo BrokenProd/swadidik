@@ -95,6 +95,15 @@ const HomePage = ({ onLogout }: HomePageProps) => {
                     >
                       Lihat
                     </button>
+
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => {
+                        navigate("/editor");
+                      }}
+                    >
+                      Sunting
+                    </button>
                   </div>
                 </div>
               </div>

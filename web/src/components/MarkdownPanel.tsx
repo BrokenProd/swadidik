@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import { Crepe } from "@milkdown/crepe";
-import "./MarkdownPanel.css";
 
 interface Props {
   markdown: string;
@@ -11,6 +10,7 @@ const MarkdownPanel = ({ markdown, onReady }: Props) => {
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    import("./MarkdownPanel.css")
     const root = rootRef.current;
     if (!root) return;
 
@@ -18,11 +18,6 @@ const MarkdownPanel = ({ markdown, onReady }: Props) => {
     const crepe = new Crepe({
       root,
       defaultValue: markdown,
-      features: {
-        [Crepe.Feature.BlockEdit]: false,
-        [Crepe.Feature.Cursor]: false,
-        [Crepe.Feature.Toolbar]: false,
-      },
     });
     crepe.setReadonly(true);
 

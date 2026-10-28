@@ -15,7 +15,6 @@ import MarkdownPanel from "#/components/MarkdownPanel";
 import LoadingHolder from "./LoadingHolder";
 import { useFileSystemStore } from "./fileSystemStore";
 import { useWorkspaceUiStore } from "./workspaceUiStore";
-import EditorPane from "./EditorPane";
 import { useDesktopLayout } from "./useDesktopLayout";
 import { useWorkspaceInitialization } from "./useWorkspaceInitialization";
 import { useActiveWorkspaceTab } from "./useActiveWorkspaceTab";
@@ -40,6 +39,7 @@ type WorkspaceLocationState = {
   tracks?: Track[];
 } | null;
 
+const EditorPane = lazy(() => import("./EditorPane"))
 const Editor = lazy(() => import("#/components/Editor"));
 const FileTree = lazy(() => import("./FileTree"));
 const TerminalPanel = lazy(() => import("./TerminalPanel"));
@@ -86,7 +86,8 @@ const Workspace = ({
   const layoutBeforeTerminalExpansion = useRef<Layout>(terminalLayout);
   const isDesktopLayout = useDesktopLayout();
 
-  const tracks = (useLocation().state as WorkspaceLocationState)?.tracks ?? [];
+  const location = useLocation();
+  const tracks = (location.state as WorkspaceLocationState)?.tracks ?? [];
   const { completedTrackIDs, setCompletedTrackIDs } =
     useCourseProgress(courseId);
 
@@ -168,9 +169,9 @@ const Workspace = ({
         fileTreeToggle={
           isDesktopLayout && showTree
             ? {
-                collapsed: isFileTreeCollapsed,
-                onToggle: () => setIsFileTreeCollapsed((c) => !c),
-              }
+              collapsed: isFileTreeCollapsed,
+              onToggle: () => setIsFileTreeCollapsed((c) => !c),
+            }
             : undefined
         }
       />
@@ -207,7 +208,7 @@ const Workspace = ({
     setMarkdownReady(false);
     clearTerminal();
     navigate(
-      `/workspace?course_id=${encodeURIComponent(courseId)}&uuid=${encodeURIComponent(nextTrackUuid)}`,
+      `${location.pathname}?course_id=${encodeURIComponent(courseId)}&uuid=${encodeURIComponent(nextTrackUuid)}`,
       { state: { tracks } },
     );
   };

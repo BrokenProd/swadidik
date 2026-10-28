@@ -1,10 +1,11 @@
-import type { ComponentType } from "react";
+import { lazy, Suspense, type ComponentType } from "react";
 import type { WorkspaceFile } from "#/shared/files";
 import { extToContentType } from "#/shared/files";
 import WorkspaceTabs from "./WorkspaceTabs";
 import { Play } from "lucide-react";
 import { apiFetch } from "#/shared/api";
 import { useTerminalStore } from "#/components/Terminal/terminalStore";
+import { useFileSystemStore } from "./fileSystemStore";
 import { useWorkspaceUiStore } from "./workspaceUiStore";
 
 interface EditorPaneProps {
@@ -16,6 +17,8 @@ interface EditorPaneProps {
   onEditorReady?: () => void;
 }
 
+const MarkdownEditor = lazy(() => import("#/components/MarkdownEditor"))
+
 const EditorPane = ({
   tabs,
   activeTab,
@@ -26,8 +29,14 @@ const EditorPane = ({
 }: EditorPaneProps) => {
   const isRunning = useWorkspaceUiStore((state) => state.isRunning);
   const setRunning = useWorkspaceUiStore((state) => state.setRunning);
+  const editableWorkspace = useWorkspaceUiStore(
+    (state) => state.config.editable,
+  );
   const clearTerminal = useTerminalStore((state) => state.clear);
   const terminalOutput = useTerminalStore((state) => state.output);
+  const updateFileContent = useFileSystemStore(
+    (state) => state.updateFileContent,
+  );
 
   const handleRun = async (file: WorkspaceFile) => {
     const language = extToContentType(file.filePath);
@@ -83,32 +92,52 @@ const EditorPane = ({
             >
               <div className="flex items-center justify-between border-b border-base-300 px-4 py-2">
                 <div className="flex items-center gap-1">
-                  <button
-                    className="btn btn-neutral btn-sm"
-                    onClick={() => handleRun(file)}
-                    disabled={isRunning}
-                    title="Run"
-                  >
-                    {isRunning ? (
-                      <span className="loading loading-spinner loading-xs" />
-                    ) : (
-                      <Play className="size-4" />
+                  {extToContentType(file.filePath) !== "markdown" &&
+                    extToContentType(file.filePath) !== "plaintext" && (
+                      <button
+                        className="btn btn-neutral btn-sm"
+                        onClick={() => handleRun(file)}
+                        disabled={isRunning}
+                        title="Run"
+                      >
+                        {isRunning ? (
+                          <span className="loading loading-spinner loading-xs" />
+                        ) : (
+                          <Play className="size-4" />
+                        )}
+                        Jalankan
+                      </button>
                     )}
-                    Jalankan
-                  </button>
 
                   <p className="text-sm font-semibold pl-4">
                     {file.filePath.split("/").filter(Boolean).join(" / ")}
                   </p>
                 </div>
               </div>
-              <div className="size-full overflow-y-auto">
-                <EditorComponent
-                  file={file}
-                  onReady={
-                    file.filePath === activeTab ? onEditorReady : undefined
-                  }
-                />
+              <div className="size-full overflow-hidden">
+                {extToContentType(file.filePath) === "markdown" ? (
+                  <Suspense fallback={<div className="flex h-full items-center justify-center"><span className="loading loading-spinner" /></div>}>
+                    <MarkdownEditor
+                      markdown={file.content}
+                      onChange={(content) =>
+                        updateFileContent(file.filePath, content)
+                      }
+                      readOnly={!editableWorkspace}
+                      onReady={
+                        file.filePath === activeTab ? onEditorReady : undefined
+                      }
+                    />
+                  </Suspense>
+                ) : (
+                  <div className="size-full overflow-y-auto">
+                    <EditorComponent
+                      file={file}
+                      onReady={
+                        file.filePath === activeTab ? onEditorReady : undefined
+                      }
+                    />
+                  </div>
+                )}
               </div>
             </div>
           ))}

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { EditorView } from "codemirror";
 import type { WorkspaceFile } from "#/shared/files";
 import { extToContentType } from "#/shared/files";
-import { EditorState } from "@codemirror/state";
+import { Compartment, EditorState } from "@codemirror/state";
 import { setupExtensions } from "./setup";
 import { loadTheme } from "#/shared/themes";
 import { useFileSystemStore } from "#/components/Workspace/fileSystemStore";
@@ -14,6 +14,7 @@ import {
 import type { ViewUpdate } from "@codemirror/view";
 
 const initializedViews = new WeakSet<EditorView>();
+const editableCompartment = new Compartment();
 
 interface EditorProps {
   file: WorkspaceFile;
@@ -26,6 +27,9 @@ const Editor = ({ file, onReady }: EditorProps) => {
 
   const [isInitializing, setInitializing] = useState(false);
   const appearance = useWorkspaceUiStore((state) => state.appearance);
+  const editableWorkspace = useWorkspaceUiStore(
+    (state) => state.config.editable,
+  );
   const updateFileContent = useFileSystemStore(
     (state) => state.updateFileContent,
   );
@@ -50,6 +54,7 @@ const Editor = ({ file, onReady }: EditorProps) => {
         const exts = [
           ...baseExtensions,
           getEditor(file.filePath).themeCompartment.of(initialTheme),
+          editableCompartment.of(EditorView.editable.of(editableWorkspace)),
           // update file from changes
           EditorView.updateListener.of((v: ViewUpdate) => {
             if (v.docChanged) {
@@ -88,6 +93,17 @@ const Editor = ({ file, onReady }: EditorProps) => {
 
     initializeEditor();
   });
+
+  useEffect(() => {
+    const view = editorViewRef.current;
+    if (!view) return;
+
+    view.dispatch({
+      effects: editableCompartment.reconfigure(
+        EditorView.editable.of(editableWorkspace),
+      ),
+    });
+  }, [editableWorkspace]);
 
   return <div className="size-full" ref={editorRef} />;
 };

@@ -5,6 +5,7 @@ import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegistrationPage from "./pages/RegistrationPage";
 import WorkspacePage from "./pages/WorkspacePage";
+import EditorPage from "./pages/EditorPage";
 import ThemeToggle from "./components/ThemeToggle";
 import ListTrackPage from "./pages/ListTrackPage";
 import LandingPage from "./pages/LandingPage";
@@ -52,13 +53,15 @@ function App() {
     return <>
       <Routes>
         <Route path="/workspace" element={<WorkspacePage />} />
+        <Route path="/editor" element={<EditorPage />} />
         <Route path="/login" element={<Navigate to="/" replace />} />
         <Route path="/register" element={<Navigate to="/" replace />} />
         <Route path="/tracks" element={<ListTrackPage onLogout={handleLogout} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
         <Route path="/" element={<HomePage onLogout={handleLogout} />} />
       </Routes>
-      {!location.pathname.startsWith("/workspace") && <ThemeToggle />}
+      {!location.pathname.startsWith("/workspace") &&
+        !location.pathname.startsWith("/editor") && <ThemeToggle />}
     </>;
   }
 
