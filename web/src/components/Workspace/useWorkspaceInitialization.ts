@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import type { WorkspaceConfig } from "./workspaceUiStore";
 import { useFileSystemStore } from "./fileSystemStore";
 import { useWorkspaceUiStore } from "./workspaceUiStore";
-import { isMaterialFile } from "#/shared/files";
 import { loadWorkspaceFiles } from "./files";
 
 interface UseWorkspaceInitializationOptions {
@@ -54,9 +53,7 @@ export const useWorkspaceInitialization = ({
           ws.files.find(
             ({ filePath }) => filePath.split("/").pop() === "main.py",
           );
-        const tabPaths = ws.files
-          .filter((file) => !isMaterialFile(file.filePath))
-          .map((file) => file.filePath);
+        const tabPaths = ws.files.map((file) => file.filePath);
 
         if (preferredFile) {
           tabPaths.splice(tabPaths.indexOf(preferredFile.filePath), 1);

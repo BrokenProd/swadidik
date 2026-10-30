@@ -76,7 +76,7 @@ const ListTrackPage = ({ onLogout }: ListTrackPageProps) => {
   const latestCompletedTrack = tracks.reduce<Track | undefined>(
     (latest, track) =>
       completedTrackIDs.has(track.uuid) &&
-      (!latest || track.order > latest.order)
+        (!latest || track.order > latest.order)
         ? track
         : latest,
     undefined,

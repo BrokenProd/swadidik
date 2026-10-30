@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { File, FilePlus } from "lucide-react";
 import { useFileSystemStore } from "./fileSystemStore";
 import { useWorkspaceUiStore } from "./workspaceUiStore";
-import { isMaterialFile, type WorkspaceFile } from "#/shared/files";
+import { type WorkspaceFile } from "#/shared/files";
 import { RenameDialog } from "./RenameDialog";
 import { FileTreeNode, type FileNode } from "./FileTreeNode";
 import { NewFileDialog } from "./NewFileDialog";
@@ -11,13 +11,12 @@ import { buildFileTree } from "./buildFileTree";
 
 const FileTree = () => {
   const filesByPath = useFileSystemStore((state) => state.files);
-  const files = useMemo(
-    () =>
-      Object.values(filesByPath).filter(
-        (file) => !isMaterialFile(file.filePath),
-      ),
-    [filesByPath],
-  );
+  const files =
+    useMemo(
+      () =>
+        Object.values(filesByPath)
+      , [filesByPath],
+    );
   const folders = useFileSystemStore((state) => state.folders);
   const createFile = useFileSystemStore((state) => state.createFile);
   const addFolder = useFileSystemStore((state) => state.addFolder);
@@ -115,7 +114,7 @@ const FileTree = () => {
       content: "",
     };
 
-    if (createFile(newFile) && !isMaterialFile(newFilePath)) {
+    if (createFile(newFile)) {
       openTab(newFilePath);
     }
   };

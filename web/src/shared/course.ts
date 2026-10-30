@@ -11,6 +11,7 @@ export type Track = {
   uuid: string;
   order: number;
   title: string;
+  material: string;
 };
 
 export type CourseProgress = {

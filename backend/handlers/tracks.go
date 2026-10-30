@@ -19,3 +19,14 @@ func TracksHandler(database *sql.DB) echo.HandlerFunc {
 		return c.JSON(http.StatusOK, tracks)
 	}
 }
+
+func MaterialHandler(database *sql.DB) echo.HandlerFunc {
+	return func(c *echo.Context) error {
+		trackUUid := c.QueryParam("uuid")
+		track := db.GetSingleTrack(database, trackUUid)
+		if track == nil {
+			return c.JSON(http.StatusNotFound, "no such track with uuid "+trackUUid)
+		}
+		return c.JSON(200, track)
+	}
+}

@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import type { JSX } from "react";
-import { isMaterialFile, type WorkspaceFile } from "#/shared/files";
+import { type WorkspaceFile } from "#/shared/files";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import type { GroupImperativeHandle, Layout, PanelImperativeHandle } from "react-resizable-panels";
 import {
@@ -88,6 +88,9 @@ const Workspace = ({
   const isDesktopLayout = useDesktopLayout();
 
   const location = useLocation();
+  const queryParams = new URLSearchParams(location.search)
+  const trackUuid = queryParams.get('uuid')
+
   const tracks = (location.state as WorkspaceLocationState)?.tracks ?? [];
   const { completedTrackIDs, setCompletedTrackIDs } =
     useCourseProgress(courseId);
@@ -96,17 +99,29 @@ const Workspace = ({
   const files = useFileSystemStore((state) => state.files);
   const tabs = tabPaths
     .map((path) => files[path])
-    .filter((file): file is WorkspaceFile =>
-      Boolean(file && !isMaterialFile(file.filePath)),
-    );
-  const materialFile = Object.values(files).find((file) =>
-    isMaterialFile(file.filePath),
-  );
+    .filter((file): file is WorkspaceFile => Boolean(file));
+  const [materialFile, setMaterialFile] = useState("")
   const selectedTab = useWorkspaceUiStore((state) => state.selectedTab);
   const updateConfig = useWorkspaceUiStore((state) => state.updateConfig);
   const clearTerminal = useTerminalStore((state) => state.clear);
 
   const showTree = showFileTree === undefined || showFileTree;
+
+  useEffect(() => {
+    const load = async () => {
+      if (materialFile != "") return
+
+      const headers = new Headers();
+      headers.set("Content-Type", "application/json");
+      const response = await apiFetch(`/tracks/material?uuid=${trackUuid}`);
+      if (!response.ok) return;
+
+      const body = (await response.json()) as Track
+      setMaterialFile(body.material)
+    }
+
+    load()
+  }, [trackUuid])
 
   useEffect(() => {
     if (fileTreePanelRef.current) {
@@ -430,7 +445,7 @@ const Workspace = ({
               <div className="flex h-full flex-col overflow-hidden bg-base-100">
                 <div className="min-h-0 flex-1 overflow-y-auto">
                   <MarkdownPanel
-                    markdown={materialFile?.content ?? ""}
+                    markdown={materialFile}
                     onReady={handleMarkdownReady}
                   />
                 </div>
@@ -478,7 +493,7 @@ const Workspace = ({
                   <aside className="flex size-full min-h-0 flex-col bg-base-100">
                     <div className="min-h-0 flex-1 overflow-y-auto">
                       <MarkdownPanel
-                        markdown={materialFile.content}
+                        markdown={materialFile}
                         onReady={handleMarkdownReady}
                       />
                     </div>

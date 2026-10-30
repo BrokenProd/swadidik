@@ -66,6 +66,7 @@ func NewServer(config entities.Config, database *sql.DB) *echo.Echo {
 	tracksGroup := e.Group("/tracks")
 	tracksGroup.Use(echojwt.WithConfig(jwtMiddleware))
 	tracksGroup.GET("/", handlers.TracksHandler(database))
+	tracksGroup.GET("/material", handlers.MaterialHandler(database))
 
 	coursesGroup := e.Group("/courses")
 	coursesGroup.Use(echojwt.WithConfig(jwtMiddleware))

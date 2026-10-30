@@ -36,7 +36,5 @@ export const extToContentType = (filePath: string) => {
   }
 };
 
-export const isMaterialFile = (filePath: string) =>
-  filePath.split("/").pop() === "material.md";
 
 export type { ContentType, WorkspaceFile };
